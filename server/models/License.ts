@@ -7,6 +7,7 @@ export interface ILicense extends Document {
   createdAt: Date;
   expiresAt: Date;
   productName: string;
+  productDownloadUrl?: string;
   licenseType: "lifetime" | "monthly" | "yearly" | "custom";
   maxActivations?: number;
   hwid?: string;
@@ -41,6 +42,9 @@ const LicenseSchema = new Schema<ILicense>({
   productName: {
     type: String,
     default: "Discord Bot",
+  },
+  productDownloadUrl: {
+    type: String,
   },
   licenseType: {
     type: String,

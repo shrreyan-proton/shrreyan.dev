@@ -182,6 +182,7 @@ export class MongoStorage implements IStorage {
       expiresAt: license.expiresAt,
       duration: license.duration || 12,
       productName: license.productName || "Discord Bot",
+      productDownloadUrl: license.productDownloadUrl,
       licenseType: license.licenseType || "custom",
       maxActivations: license.maxActivations || 1,
       hwid: license.hwid,

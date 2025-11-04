@@ -33,6 +33,7 @@ export const insertLicenseSchema = z.object({
   status: licenseStatusEnum.default("active"),
   duration: z.number().default(12), // months
   productName: z.string().default("Discord Bot"),
+  productDownloadUrl: z.string().url().optional(),
   licenseType: licenseTypeEnum.default("custom"),
   maxActivations: z.number().default(1),
   hwid: z.string().optional(),
