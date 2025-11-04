@@ -38,6 +38,8 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
     role: "customer",
   });
 
+  const isProtectedAdmin = user?.username === "Shrreyan";
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -128,6 +130,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
                 onValueChange={(value) =>
                   setFormData({ ...formData, role: value })
                 }
+                disabled={isProtectedAdmin}
               >
                 <SelectTrigger id="edit-role" data-testid="select-edit-role">
                   <SelectValue placeholder="Select role" />
@@ -139,6 +142,11 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
+              {isProtectedAdmin && (
+                <p className="text-xs text-muted-foreground">
+                  This user's role is protected and cannot be changed.
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter className="gap-2">

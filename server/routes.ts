@@ -93,6 +93,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/users/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
+      const existingUser = await storage.getUser(req.params.id);
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Protect Shrreyan's admin role
+      if (existingUser.username === "Shrreyan" && (req.body.role || req.body.isAdmin !== undefined)) {
+        if (req.body.role && req.body.role !== "admin") {
+          return res.status(403).json({ error: "Cannot change Shrreyan's role" });
+        }
+        if (req.body.isAdmin === false) {
+          return res.status(403).json({ error: "Cannot change Shrreyan's admin status" });
+        }
+      }
+
       const user = await storage.updateUser(req.params.id, req.body);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -106,6 +121,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/users/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
+      const existingUser = await storage.getUser(req.params.id);
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Protect Shrreyan from deletion
+      if (existingUser.username === "Shrreyan") {
+        return res.status(403).json({ error: "Cannot delete Shrreyan" });
+      }
+
       const success = await storage.deleteUser(req.params.id);
       if (!success) {
         return res.status(404).json({ error: "User not found" });
