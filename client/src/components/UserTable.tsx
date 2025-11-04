@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash2, Shield } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, Shield, User as UserIcon, Crown, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export type User = {
@@ -23,6 +23,7 @@ export type User = {
   username?: string;
   discordId?: string;
   discordUsername?: string;
+  role: "user" | "customer" | "staff" | "admin";
   isAdmin: boolean;
   profilePicture?: string;
   licensesCount: number;
@@ -41,6 +42,39 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
       return username.slice(0, 2).toUpperCase();
     }
     return email.slice(0, 2).toUpperCase();
+  };
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case "admin":
+        return (
+          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20" data-testid="badge-role-admin">
+            <Shield className="h-3 w-3 mr-1" />
+            Admin
+          </Badge>
+        );
+      case "staff":
+        return (
+          <Badge variant="outline" className="bg-accent/50 text-accent-foreground border-accent" data-testid="badge-role-staff">
+            <Briefcase className="h-3 w-3 mr-1" />
+            Staff
+          </Badge>
+        );
+      case "customer":
+        return (
+          <Badge variant="outline" className="bg-muted/50" data-testid="badge-role-customer">
+            <Crown className="h-3 w-3 mr-1" />
+            Customer
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" data-testid="badge-role-user">
+            <UserIcon className="h-3 w-3 mr-1" />
+            User
+          </Badge>
+        );
+    }
   };
 
   return (
@@ -82,14 +116,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                 )}
               </TableCell>
               <TableCell>
-                {user.isAdmin ? (
-                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                    <Shield className="h-3 w-3 mr-1" />
-                    Admin
-                  </Badge>
-                ) : (
-                  <Badge variant="outline">User</Badge>
-                )}
+                {getRoleBadge(user.role)}
               </TableCell>
               <TableCell data-testid={`text-licenses-${user.id}`}>
                 <span className="font-medium">{user.licensesCount}</span>
