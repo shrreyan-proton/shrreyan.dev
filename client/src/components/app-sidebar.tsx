@@ -125,6 +125,13 @@ export function AppSidebar() {
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
+              onClick={() => setLocation("/profile")}
+              data-testid="menu-item-profile"
+            >
+              <User className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
               onClick={() => setLocation("/settings")}
               data-testid="menu-item-settings"
             >

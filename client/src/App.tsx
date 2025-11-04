@@ -14,6 +14,7 @@ import DashboardPage from "@/pages/DashboardPage";
 import LicensesPage from "@/pages/LicensesPage";
 import UsersPage from "@/pages/UsersPage";
 import SettingsPage from "@/pages/SettingsPage";
+import ProfilePage from "@/pages/ProfilePage";
 
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -66,6 +67,7 @@ function Router() {
         <Route path="/" component={DashboardPage} />
         <Route path="/licenses" component={LicensesPage} />
         <Route path="/users" component={UsersPage} />
+        <Route path="/profile" component={ProfilePage} />
         <Route path="/settings" component={SettingsPage} />
         <Route component={NotFound} />
       </Switch>
