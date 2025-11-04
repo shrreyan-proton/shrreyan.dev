@@ -112,11 +112,11 @@ export function AppSidebar() {
               </Avatar>
               <div className="flex flex-col items-start text-sm overflow-hidden">
                 <span className="font-medium truncate w-full">
-                  {user?.username || "Admin"}
+                  {user?.username || user?.email || "Admin"}
                 </span>
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <UserCircle className="h-3 w-3" />
-                  Customer
+                  {user?.isAdmin ? "Admin" : "Customer"}
                 </span>
               </div>
             </button>

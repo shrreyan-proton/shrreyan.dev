@@ -10,7 +10,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface EditUserDialogProps {
   user: {
@@ -29,7 +35,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
     username: "",
     email: "",
     password: "",
-    isAdmin: false,
+    role: "customer",
   });
 
   useEffect(() => {
@@ -38,7 +44,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
         username: user.username || "",
         email: user.email,
         password: "",
-        isAdmin: user.isAdmin,
+        role: user.isAdmin ? "admin" : "customer",
       });
     }
   }, [user]);
@@ -50,7 +56,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
     const submitData: any = {
       username: formData.username,
       email: formData.email,
-      isAdmin: formData.isAdmin,
+      isAdmin: formData.role === "admin",
     };
     
     if (formData.password) {
@@ -114,16 +120,22 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
                 data-testid="input-edit-password"
               />
             </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="edit-admin">Admin privileges</Label>
-              <Switch
-                id="edit-admin"
-                checked={formData.isAdmin}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, isAdmin: checked })
+            <div className="space-y-2">
+              <Label htmlFor="edit-role">Role</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, role: value })
                 }
-                data-testid="switch-edit-admin"
-              />
+              >
+                <SelectTrigger id="edit-role" data-testid="select-edit-role">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="customer">Customer</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter className="gap-2">

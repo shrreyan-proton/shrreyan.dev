@@ -27,14 +27,16 @@ interface CreateUserDialogProps {
 export function CreateUserDialog({ onSubmit }: CreateUserDialogProps) {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
+    username: "",
     email: "",
     password: "",
-    role: "user",
+    role: "customer",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const submitData = {
+      username: formData.username,
       email: formData.email,
       password: formData.password,
       isAdmin: formData.role === "admin",
@@ -42,7 +44,7 @@ export function CreateUserDialog({ onSubmit }: CreateUserDialogProps) {
     console.log("Creating user:", submitData);
     onSubmit?.(submitData);
     setOpen(false);
-    setFormData({ email: "", password: "", role: "user" });
+    setFormData({ username: "", email: "", password: "", role: "customer" });
   };
 
   return (
@@ -62,6 +64,20 @@ export function CreateUserDialog({ onSubmit }: CreateUserDialogProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                value={formData.username}
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
+                placeholder="Username"
+                required
+                data-testid="input-username"
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -102,7 +118,7 @@ export function CreateUserDialog({ onSubmit }: CreateUserDialogProps) {
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="customer">Customer</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
