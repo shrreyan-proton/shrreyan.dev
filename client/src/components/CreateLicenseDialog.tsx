@@ -19,11 +19,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus, Sparkles, Check, ChevronsUpDown } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
 
 interface CreateLicenseDialogProps {
   onSubmit?: (data: any) => void;
+}
+
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  discordId?: string;
+  discordUsername?: string;
+  isAdmin: boolean;
 }
 
 // Generate a random license key
@@ -43,6 +67,7 @@ function generateLicenseKey(): string {
 
 export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
   const [open, setOpen] = useState(false);
+  const [userPopoverOpen, setUserPopoverOpen] = useState(false);
   const [formData, setFormData] = useState({
     key: "",
     userId: "",
@@ -51,6 +76,11 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
     maxActivations: "1",
     discordUserId: "",
     note: "",
+  });
+
+  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+    enabled: open,
   });
 
   const handleGenerate = () => {
@@ -196,21 +226,96 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
 
             <div className="space-y-2">
               <Label htmlFor="user">Assign to User (Optional)</Label>
-              <Select
-                value={formData.userId}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, userId: value })
-                }
-              >
-                <SelectTrigger id="user" data-testid="select-user">
-                  <SelectValue placeholder="Select a user" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  <SelectItem value="user1">John Doe</SelectItem>
-                  <SelectItem value="user2">Jane Smith</SelectItem>
-                </SelectContent>
-              </Select>
+              <Popover open={userPopoverOpen} onOpenChange={setUserPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={userPopoverOpen}
+                    className="w-full justify-between font-normal"
+                    data-testid="select-user"
+                  >
+                    {formData.userId && formData.userId !== "unassigned"
+                      ? users.find((user) => user.id === formData.userId)?.username || 
+                        users.find((user) => user.id === formData.userId)?.email ||
+                        "Select user"
+                      : formData.userId === "unassigned"
+                      ? "Unassigned"
+                      : "Select user"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[400px] p-0">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Search by username, email, or Discord ID..." 
+                      data-testid="input-search-user"
+                    />
+                    <CommandList>
+                      <CommandEmpty>
+                        {usersLoading ? "Loading users..." : "No users found."}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="unassigned"
+                          onSelect={() => {
+                            setFormData({ ...formData, userId: "unassigned" });
+                            setUserPopoverOpen(false);
+                          }}
+                          data-testid="user-option-unassigned"
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              formData.userId === "unassigned" ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-medium">Unassigned</span>
+                            <span className="text-xs text-muted-foreground">
+                              No user assigned
+                            </span>
+                          </div>
+                        </CommandItem>
+                        {users.map((user) => (
+                          <CommandItem
+                            key={user.id}
+                            value={`${user.username} ${user.email} ${user.discordId || ""} ${user.discordUsername || ""}`}
+                            onSelect={() => {
+                              setFormData({ ...formData, userId: user.id });
+                              setUserPopoverOpen(false);
+                            }}
+                            data-testid={`user-option-${user.id}`}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.userId === user.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-col flex-1 min-w-0">
+                              <span className="font-medium truncate">
+                                {user.username}
+                                {user.isAdmin && (
+                                  <span className="ml-2 text-xs text-primary">(Admin)</span>
+                                )}
+                              </span>
+                              <span className="text-xs text-muted-foreground truncate">
+                                {user.email}
+                              </span>
+                              {user.discordId && (
+                                <span className="text-xs text-muted-foreground truncate font-mono">
+                                  Discord: {user.discordUsername || user.discordId}
+                                </span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">
