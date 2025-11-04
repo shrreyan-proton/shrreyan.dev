@@ -1,57 +1,21 @@
 import { StatsCard } from "@/components/StatsCard";
 import { Key, Users, CheckCircle, XCircle } from "lucide-react";
-import { LicenseTable, type License } from "@/components/LicenseTable";
-
-// TODO: Remove mock functionality
-const mockLicenses: License[] = [
-  {
-    id: "1",
-    key: "DISC-A1B2-C3D4-E5F6",
-    userId: "user1",
-    userName: "John Doe",
-    status: "active",
-    createdAt: "2024-01-15",
-    expiresAt: "2025-01-15",
-  },
-  {
-    id: "2",
-    key: "DISC-G7H8-I9J0-K1L2",
-    status: "active",
-    createdAt: "2024-02-20",
-    expiresAt: "2025-02-20",
-  },
-  {
-    id: "3",
-    key: "DISC-M3N4-O5P6-Q7R8",
-    userId: "user2",
-    userName: "Jane Smith",
-    status: "expired",
-    createdAt: "2023-06-10",
-    expiresAt: "2024-06-10",
-  },
-  {
-    id: "4",
-    key: "DISC-S9T0-U1V2-W3X4",
-    userId: "user3",
-    userName: "Bob Wilson",
-    status: "active",
-    createdAt: "2024-03-05",
-    expiresAt: "2025-03-05",
-  },
-  {
-    id: "5",
-    key: "DISC-Y5Z6-A7B8-C9D0",
-    status: "suspended",
-    createdAt: "2024-01-25",
-    expiresAt: "2025-01-25",
-  },
-];
+import { LicenseTable } from "@/components/LicenseTable";
+import { useQuery } from "@tanstack/react-query";
 
 export default function DashboardPage() {
-  const totalLicenses = mockLicenses.length;
-  const activeLicenses = mockLicenses.filter((l) => l.status === "active").length;
-  const expiredLicenses = mockLicenses.filter((l) => l.status === "expired").length;
-  const totalUsers = 8;
+  const { data: licenses = [] } = useQuery<any[]>({
+    queryKey: ["/api/licenses"],
+  });
+
+  const { data: users = [] } = useQuery<any[]>({
+    queryKey: ["/api/users"],
+  });
+
+  const totalLicenses = licenses.length;
+  const activeLicenses = licenses.filter((l) => l.status === "active").length;
+  const expiredLicenses = licenses.filter((l) => l.status === "expired").length;
+  const totalUsers = users.length;
 
   return (
     <div className="space-y-8">
@@ -97,7 +61,7 @@ export default function DashboardPage() {
           <p className="text-sm text-muted-foreground">Latest license activity</p>
         </div>
         <LicenseTable
-          licenses={mockLicenses}
+          licenses={licenses.slice(0, 5)}
           onEdit={(license) => console.log("Edit license:", license)}
           onDelete={(license) => console.log("Delete license:", license)}
         />

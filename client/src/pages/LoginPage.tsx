@@ -5,27 +5,40 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SiDiscord } from "react-icons/si";
+import { useToast } from "@/hooks/use-toast";
 import logoImage from "@assets/logo_1762262685070.png";
-import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
-  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const { login, isLoggingIn, loginError } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  const handleEmailLogin = (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Email login:", formData);
-    // TODO: Remove mock functionality - simulate login
-    setLocation("/");
+    try {
+      await login(formData);
+      toast({
+        title: "Success",
+        description: "Logged in successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDiscordLogin = () => {
-    console.log("Discord login clicked");
-    // TODO: Remove mock functionality - would redirect to Discord OAuth
-    setLocation("/");
+    toast({
+      title: "Discord Login",
+      description: "Discord OAuth integration coming soon",
+    });
   };
 
   return (
@@ -91,8 +104,8 @@ export default function LoginPage() {
                 data-testid="input-password"
               />
             </div>
-            <Button type="submit" className="w-full" data-testid="button-email-login">
-              Sign In
+            <Button type="submit" className="w-full" data-testid="button-email-login" disabled={isLoggingIn}>
+              {isLoggingIn ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 

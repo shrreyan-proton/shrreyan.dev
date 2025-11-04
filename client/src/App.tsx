@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Redirect } from "@/components/Redirect";
+import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
@@ -36,11 +38,25 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
 
 function Router() {
   const [location] = useLocation();
-  
-  // TODO: Remove mock functionality - check if user is authenticated
-  const isAuthenticated = location !== "/login";
+  const { isAuthenticated, isLoading, user } = useAuth();
 
-  if (!isAuthenticated) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated && location !== "/login") {
+    return <LoginPage />;
+  }
+
+  if (isAuthenticated && location === "/login") {
+    return <Redirect to="/" />;
+  }
+
+  if (location === "/login") {
     return <LoginPage />;
   }
 

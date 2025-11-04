@@ -1,85 +1,56 @@
 import { useState } from "react";
-import { UserTable, type User } from "@/components/UserTable";
+import { UserTable } from "@/components/UserTable";
 import { CreateUserDialog } from "@/components/CreateUserDialog";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-
-// TODO: Remove mock functionality
-const mockUsers: User[] = [
-  {
-    id: "1",
-    email: "shrreyangO@gmail.com",
-    discordId: "123456789",
-    discordUsername: "shrreyangO",
-    isAdmin: true,
-    licensesCount: 5,
-    joinedAt: "2024-01-01",
-  },
-  {
-    id: "2",
-    email: "john.doe@example.com",
-    discordId: "987654321",
-    discordUsername: "johndoe",
-    isAdmin: false,
-    licensesCount: 2,
-    joinedAt: "2024-02-15",
-  },
-  {
-    id: "3",
-    email: "jane.smith@example.com",
-    discordId: "456789123",
-    discordUsername: "janesmith",
-    isAdmin: false,
-    licensesCount: 1,
-    joinedAt: "2024-03-10",
-  },
-  {
-    id: "4",
-    email: "bob.wilson@example.com",
-    isAdmin: false,
-    licensesCount: 1,
-    joinedAt: "2024-03-20",
-  },
-  {
-    id: "5",
-    email: "alice.johnson@example.com",
-    discordId: "789123456",
-    discordUsername: "alicejohnson",
-    isAdmin: false,
-    licensesCount: 1,
-    joinedAt: "2024-04-05",
-  },
-  {
-    id: "6",
-    email: "charlie.brown@example.com",
-    discordId: "321654987",
-    discordUsername: "charliebrown",
-    isAdmin: false,
-    licensesCount: 1,
-    joinedAt: "2024-05-12",
-  },
-  {
-    id: "7",
-    email: "david.lee@example.com",
-    isAdmin: false,
-    licensesCount: 0,
-    joinedAt: "2024-06-01",
-  },
-  {
-    id: "8",
-    email: "emma.white@example.com",
-    discordId: "654987321",
-    discordUsername: "emmawhite",
-    isAdmin: false,
-    licensesCount: 0,
-    joinedAt: "2024-06-15",
-  },
-];
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function UsersPage() {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredUsers = mockUsers.filter(
+  const { data: users = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/users"],
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/users", data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "Success",
+        description: "User created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/users/${id}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+      });
+    },
+  });
+
+  const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.discordUsername?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -92,7 +63,7 @@ export default function UsersPage() {
           <h1 className="text-3xl font-semibold" data-testid="text-page-title">Users</h1>
           <p className="text-muted-foreground mt-1">Manage all users and their permissions</p>
         </div>
-        <CreateUserDialog onSubmit={(data) => console.log("Create:", data)} />
+        <CreateUserDialog onSubmit={(data) => createUserMutation.mutate(data)} />
       </div>
 
       <div className="relative">
@@ -106,11 +77,15 @@ export default function UsersPage() {
         />
       </div>
 
-      <UserTable
-        users={filteredUsers}
-        onEdit={(user) => console.log("Edit user:", user)}
-        onDelete={(user) => console.log("Delete user:", user)}
-      />
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">Loading...</div>
+      ) : (
+        <UserTable
+          users={filteredUsers}
+          onEdit={(user) => console.log("Edit user:", user)}
+          onDelete={(user) => deleteUserMutation.mutate(user.id)}
+        />
+      )}
     </div>
   );
 }

@@ -1,83 +1,56 @@
 import { useState } from "react";
-import { LicenseTable, type License } from "@/components/LicenseTable";
+import { LicenseTable } from "@/components/LicenseTable";
 import { CreateLicenseDialog } from "@/components/CreateLicenseDialog";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-
-// TODO: Remove mock functionality
-const mockLicenses: License[] = [
-  {
-    id: "1",
-    key: "DISC-A1B2-C3D4-E5F6",
-    userId: "user1",
-    userName: "John Doe",
-    status: "active",
-    createdAt: "2024-01-15",
-    expiresAt: "2025-01-15",
-  },
-  {
-    id: "2",
-    key: "DISC-G7H8-I9J0-K1L2",
-    status: "active",
-    createdAt: "2024-02-20",
-    expiresAt: "2025-02-20",
-  },
-  {
-    id: "3",
-    key: "DISC-M3N4-O5P6-Q7R8",
-    userId: "user2",
-    userName: "Jane Smith",
-    status: "expired",
-    createdAt: "2023-06-10",
-    expiresAt: "2024-06-10",
-  },
-  {
-    id: "4",
-    key: "DISC-S9T0-U1V2-W3X4",
-    userId: "user3",
-    userName: "Bob Wilson",
-    status: "active",
-    createdAt: "2024-03-05",
-    expiresAt: "2025-03-05",
-  },
-  {
-    id: "5",
-    key: "DISC-Y5Z6-A7B8-C9D0",
-    status: "suspended",
-    createdAt: "2024-01-25",
-    expiresAt: "2025-01-25",
-  },
-  {
-    id: "6",
-    key: "DISC-E1F2-G3H4-I5J6",
-    userId: "user4",
-    userName: "Alice Johnson",
-    status: "active",
-    createdAt: "2024-04-12",
-    expiresAt: "2025-04-12",
-  },
-  {
-    id: "7",
-    key: "DISC-K7L8-M9N0-O1P2",
-    status: "expired",
-    createdAt: "2023-08-15",
-    expiresAt: "2024-08-15",
-  },
-  {
-    id: "8",
-    key: "DISC-Q3R4-S5T6-U7V8",
-    userId: "user5",
-    userName: "Charlie Brown",
-    status: "active",
-    createdAt: "2024-05-20",
-    expiresAt: "2025-05-20",
-  },
-];
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LicensesPage() {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredLicenses = mockLicenses.filter(
+  const { data: licenses = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/licenses"],
+  });
+
+  const createLicenseMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/licenses", data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/licenses"] });
+      toast({
+        title: "Success",
+        description: "License created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create license",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteLicenseMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/licenses/${id}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/licenses"] });
+      toast({
+        title: "Success",
+        description: "License deleted successfully",
+      });
+    },
+  });
+
+  const filteredLicenses = licenses.filter(
     (license) =>
       license.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
       license.userName?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -90,7 +63,7 @@ export default function LicensesPage() {
           <h1 className="text-3xl font-semibold" data-testid="text-page-title">Licenses</h1>
           <p className="text-muted-foreground mt-1">Manage all Discord bot licenses</p>
         </div>
-        <CreateLicenseDialog onSubmit={(data) => console.log("Create:", data)} />
+        <CreateLicenseDialog onSubmit={(data) => createLicenseMutation.mutate(data)} />
       </div>
 
       <div className="relative">
@@ -104,11 +77,15 @@ export default function LicensesPage() {
         />
       </div>
 
-      <LicenseTable
-        licenses={filteredLicenses}
-        onEdit={(license) => console.log("Edit license:", license)}
-        onDelete={(license) => console.log("Delete license:", license)}
-      />
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">Loading...</div>
+      ) : (
+        <LicenseTable
+          licenses={filteredLicenses}
+          onEdit={(license) => console.log("Edit license:", license)}
+          onDelete={(license) => deleteLicenseMutation.mutate(license.id)}
+        />
+      )}
     </div>
   );
 }
