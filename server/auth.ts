@@ -1,5 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as DiscordStrategy } from "passport-discord";
 import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import type { Express } from "express";
@@ -50,6 +51,54 @@ export function setupAuth(app: Express) {
 
   app.use(passport.initialize());
   app.use(passport.session());
+}
+
+export async function initializeDiscordStrategy() {
+  const config = await storage.getDiscordConfig();
+  
+  if (!config || !config.clientId || !config.clientSecret || !config.redirectUri) {
+    console.log("⚠️  Discord OAuth not configured");
+    return false;
+  }
+
+  passport.use(
+    new DiscordStrategy(
+      {
+        clientID: config.clientId,
+        clientSecret: config.clientSecret,
+        callbackURL: config.redirectUri,
+        scope: ["identify", "email"],
+      },
+      async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+        try {
+          let user = await storage.getUserByDiscordId(profile.id);
+          
+          if (user) {
+            await storage.updateUser(user.id, {
+              discordUsername: profile.username,
+            });
+            user = await storage.getUser(user.id);
+            return done(null, user);
+          } else {
+            const newUser = await storage.createUser({
+              username: profile.username,
+              email: profile.email || `${profile.id}@discord.user`,
+              password: Math.random().toString(36).substring(2, 15),
+              discordId: profile.id,
+              discordUsername: profile.username,
+              isAdmin: false,
+            });
+            return done(null, newUser);
+          }
+        } catch (error) {
+          return done(error, null);
+        }
+      }
+    )
+  );
+
+  console.log("✅ Discord OAuth strategy initialized");
+  return true;
 }
 
 // Middleware to check if user is authenticated
