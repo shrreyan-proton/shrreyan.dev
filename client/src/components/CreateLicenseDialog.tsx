@@ -93,6 +93,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
       ...formData,
       duration: parseInt(formData.duration),
       maxActivations: parseInt(formData.maxActivations),
+      userId: formData.userId || undefined,
       discordUserId: formData.discordUserId || undefined,
       note: formData.note || undefined,
     };
@@ -235,13 +236,11 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
                     className="w-full justify-between font-normal"
                     data-testid="select-user"
                   >
-                    {formData.userId && formData.userId !== "unassigned"
+                    {formData.userId
                       ? users.find((user) => user.id === formData.userId)?.username || 
                         users.find((user) => user.id === formData.userId)?.email ||
                         "Select user"
-                      : formData.userId === "unassigned"
-                      ? "Unassigned"
-                      : "Select user"}
+                      : "Unassigned"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
@@ -259,7 +258,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
                         <CommandItem
                           value="unassigned"
                           onSelect={() => {
-                            setFormData({ ...formData, userId: "unassigned" });
+                            setFormData({ ...formData, userId: "" });
                             setUserPopoverOpen(false);
                           }}
                           data-testid="user-option-unassigned"
@@ -267,7 +266,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              formData.userId === "unassigned" ? "opacity-100" : "opacity-0"
+                              !formData.userId ? "opacity-100" : "opacity-0"
                             )}
                           />
                           <div className="flex flex-col">
