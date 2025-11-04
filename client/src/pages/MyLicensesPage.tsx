@@ -50,7 +50,7 @@ export default function MyLicensesPage() {
   });
 
   const { data: licenses = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/licenses"],
+    queryKey: ["/api/licenses/my"],
   });
 
   const createLicenseMutation = useMutation({
@@ -59,7 +59,7 @@ export default function MyLicensesPage() {
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/licenses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/licenses/my"] });
       toast({
         title: "Success",
         description: "License key generated successfully",

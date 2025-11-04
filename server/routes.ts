@@ -171,7 +171,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // License routes
-  app.get("/api/licenses", isAuthenticated, async (req, res) => {
+  // Admin: Get all licenses
+  app.get("/api/licenses", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const licenses = await storage.listLicenses();
       const licensesWithUserInfo = await Promise.all(
@@ -192,7 +193,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/licenses", isAuthenticated, isAdmin, async (req, res) => {
+  // User: Get only their own licenses
+  app.get("/api/licenses/my", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const licenses = await storage.getLicensesByUserId(userId);
+      res.json(licenses);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch your licenses" });
+    }
+  });
+
+  // Admin: Create license with full control
+  app.post("/api/licenses/admin", isAuthenticated, isAdmin, async (req, res) => {
     try {
       // Generate a random license key if not provided
       const key = req.body.key || `DISC-${randomBytes(4).toString('hex').toUpperCase()}-${randomBytes(4).toString('hex').toUpperCase()}-${randomBytes(4).toString('hex').toUpperCase()}`;
@@ -203,6 +216,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const license = await storage.createLicense(validated);
+      res.json(license);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to create license" });
+    }
+  });
+
+  // User: Create license for themselves
+  app.post("/api/licenses", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Generate a random license key if not provided
+      const key = req.body.key || `DISC-${randomBytes(4).toString('hex').toUpperCase()}-${randomBytes(4).toString('hex').toUpperCase()}-${randomBytes(4).toString('hex').toUpperCase()}`;
+      
+      // Create a schema that omits userId to prevent privilege escalation
+      const userLicenseSchema = insertLicenseSchema.omit({ userId: true });
+      
+      // Validate without userId (this will reject any attempt to set userId)
+      const validated = userLicenseSchema.parse({
+        ...req.body,
+        key,
+      });
+      
+      // Regular users can only create licenses for themselves
+      const licenseData = {
+        ...validated,
+        userId, // Force userId to be the authenticated user
+      };
+      
+      const license = await storage.createLicense(licenseData);
       res.json(license);
     } catch (error: any) {
       res.status(400).json({ error: error.message || "Failed to create license" });

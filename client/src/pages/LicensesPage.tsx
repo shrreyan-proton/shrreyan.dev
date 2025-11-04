@@ -17,7 +17,7 @@ export default function LicensesPage() {
 
   const createLicenseMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/licenses", data);
+      const res = await apiRequest("POST", "/api/licenses/admin", data);
       return await res.json();
     },
     onSuccess: () => {
