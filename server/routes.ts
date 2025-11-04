@@ -247,33 +247,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User: Create license for themselves
-  app.post("/api/licenses", isAuthenticated, async (req, res) => {
+  // User: Regenerate license key (users can only regenerate their own licenses)
+  app.post("/api/licenses/:id/regenerate", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
+      const license = await storage.getLicense(req.params.id);
       
-      // Generate a random license key if not provided
-      const key = req.body.key || `DISC-${randomBytes(4).toString('hex').toUpperCase()}-${randomBytes(4).toString('hex').toUpperCase()}-${randomBytes(4).toString('hex').toUpperCase()}`;
+      if (!license) {
+        return res.status(404).json({ error: "License not found" });
+      }
       
-      // Create a schema that omits userId to prevent privilege escalation
-      const userLicenseSchema = insertLicenseSchema.omit({ userId: true });
+      // Check if the license belongs to the user
+      if (license.userId !== userId) {
+        return res.status(403).json({ error: "You can only regenerate your own licenses" });
+      }
       
-      // Validate without userId (this will reject any attempt to set userId)
-      const validated = userLicenseSchema.parse({
-        ...req.body,
-        key,
-      });
+      // Generate new license key
+      const newKey = `CRIM-${randomBytes(4).toString('hex').toUpperCase()}-${randomBytes(4).toString('hex').toUpperCase()}-${randomBytes(4).toString('hex').toUpperCase()}-${randomBytes(4).toString('hex').toUpperCase()}`;
       
-      // Regular users can only create licenses for themselves
-      const licenseData = {
-        ...validated,
-        userId, // Force userId to be the authenticated user
-      };
-      
-      const license = await storage.createLicense(licenseData);
-      res.json(license);
+      const updatedLicense = await storage.updateLicense(req.params.id, { key: newKey });
+      res.json(updatedLicense);
     } catch (error: any) {
-      res.status(400).json({ error: error.message || "Failed to create license" });
+      res.status(400).json({ error: error.message || "Failed to regenerate license key" });
     }
   });
 
