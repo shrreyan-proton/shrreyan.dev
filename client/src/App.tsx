@@ -33,8 +33,8 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
             <div className="container max-w-7xl mx-auto p-6 lg:p-8">
               {children}
             </div>
-            <Footer />
           </main>
+          <Footer />
         </div>
       </div>
     </SidebarProvider>
