@@ -122,10 +122,6 @@ export default function LoginPage() {
             <SiDiscord className="h-5 w-5 mr-2" />
             Continue with Discord
           </Button>
-
-          <div className="text-xs text-center text-muted-foreground">
-            Admin: shrreyango@gmail.com
-          </div>
         </CardContent>
       </Card>
     </div>
