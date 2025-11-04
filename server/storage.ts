@@ -1,7 +1,14 @@
 import { type User as UserType, type InsertUser, type License as LicenseType, type InsertLicense } from "@shared/schema";
 import { User } from "./models/User";
 import { License } from "./models/License";
+import { DiscordConfig } from "./models/DiscordConfig";
 import bcrypt from "bcryptjs";
+
+export interface DiscordConfigType {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+}
 
 export interface IStorage {
   // User methods
@@ -21,6 +28,10 @@ export interface IStorage {
   updateLicense(id: string, updates: Partial<LicenseType>): Promise<LicenseType | null>;
   deleteLicense(id: string): Promise<boolean>;
   getLicensesByUserId(userId: string): Promise<LicenseType[]>;
+
+  // Discord config methods
+  getDiscordConfig(): Promise<DiscordConfigType | null>;
+  saveDiscordConfig(config: DiscordConfigType): Promise<DiscordConfigType>;
 }
 
 export class MongoStorage implements IStorage {
@@ -109,6 +120,40 @@ export class MongoStorage implements IStorage {
   async getLicensesByUserId(userId: string): Promise<LicenseType[]> {
     const licenses = await License.find({ userId }).populate("userId", "username email discordUsername");
     return licenses.map((license) => this.formatLicense(license));
+  }
+
+  // Discord config methods
+  async getDiscordConfig(): Promise<DiscordConfigType | null> {
+    const config = await DiscordConfig.findOne();
+    if (!config) return null;
+    return {
+      clientId: config.clientId,
+      clientSecret: config.clientSecret,
+      redirectUri: config.redirectUri,
+    };
+  }
+
+  async saveDiscordConfig(configData: DiscordConfigType): Promise<DiscordConfigType> {
+    const existing = await DiscordConfig.findOne();
+    if (existing) {
+      existing.clientId = configData.clientId;
+      existing.clientSecret = configData.clientSecret;
+      existing.redirectUri = configData.redirectUri;
+      existing.updatedAt = new Date();
+      await existing.save();
+      return {
+        clientId: existing.clientId,
+        clientSecret: existing.clientSecret,
+        redirectUri: existing.redirectUri,
+      };
+    } else {
+      const config = await DiscordConfig.create(configData);
+      return {
+        clientId: config.clientId,
+        clientSecret: config.clientSecret,
+        redirectUri: config.redirectUri,
+      };
+    }
   }
 
   // Helper methods

@@ -159,6 +159,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Discord config routes
+  app.get("/api/discord-config", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const config = await storage.getDiscordConfig();
+      res.json(config || { clientId: "", clientSecret: "", redirectUri: "" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch Discord configuration" });
+    }
+  });
+
+  app.post("/api/discord-config", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { clientId, clientSecret, redirectUri } = req.body;
+      if (!clientId || !clientSecret || !redirectUri) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+      const config = await storage.saveDiscordConfig({ clientId, clientSecret, redirectUri });
+      res.json(config);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to save Discord configuration" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
