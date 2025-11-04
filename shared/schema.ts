@@ -45,6 +45,13 @@ export const insertLicenseSchema = z.object({
   lastHeartbeat: z.date().optional(),
   lastIpAddress: z.string().optional(),
   activationCount: z.number().default(0),
+  isShutdownRequested: z.boolean().default(false),
+  shutdownRequestedAt: z.date().optional(),
+  shutdownClearedAt: z.date().optional(),
+  shutdownReason: z.string().optional(),
+  guildName: z.string().optional(),
+  guildInviteUrl: z.string().optional(),
+  botVersion: z.string().optional(),
 });
 
 export const licenseSchema = insertLicenseSchema.extend({
@@ -75,3 +82,29 @@ export const botApiKeySchema = insertBotApiKeySchema.extend({
 
 export type InsertBotApiKey = z.infer<typeof insertBotApiKeySchema>;
 export type BotApiKey = z.infer<typeof botApiKeySchema>;
+
+// Bot Event Schema
+export const botEventTypeEnum = z.enum([
+  "shutdown_requested",
+  "shutdown_cleared",
+  "shutdown_acknowledged",
+  "bot_started",
+  "heartbeat_missed",
+  "status_change"
+]);
+
+export const insertBotEventSchema = z.object({
+  licenseId: z.string(),
+  eventType: botEventTypeEnum,
+  reason: z.string().optional(),
+  metadata: z.record(z.any()).optional(),
+});
+
+export const botEventSchema = insertBotEventSchema.extend({
+  id: z.string(),
+  timestamp: z.date(),
+});
+
+export type InsertBotEvent = z.infer<typeof insertBotEventSchema>;
+export type BotEvent = z.infer<typeof botEventSchema>;
+export type BotEventType = z.infer<typeof botEventTypeEnum>;

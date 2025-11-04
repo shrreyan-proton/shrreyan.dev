@@ -339,14 +339,35 @@ export function registerBotRoutes(app: Express) {
         });
       }
 
-      // Update heartbeat
-      await storage.updateLicense(license.id, {
+      // Update heartbeat and bot metadata
+      const updates: any = {
         lastHeartbeat: new Date(),
         lastIpAddress: req.ip || req.socket.remoteAddress,
-      });
+      };
+
+      // Update optional bot metadata if provided
+      if (req.body.botVersion) {
+        updates.botVersion = req.body.botVersion;
+      }
+      if (req.body.guildName) {
+        updates.guildName = req.body.guildName;
+      }
+      if (req.body.guildInviteUrl) {
+        updates.guildInviteUrl = req.body.guildInviteUrl;
+      }
+
+      await storage.updateLicense(license.id, updates);
+
+      // Check if shutdown is requested
+      const action = license.isShutdownRequested ? {
+        type: "shutdown",
+        reason: license.shutdownReason || "Shutdown requested by administrator",
+        requestedAt: license.shutdownRequestedAt
+      } : null;
 
       res.json({
         valid: true,
+        action: action,
         license: {
           key: license.key,
           productName: license.productName,
@@ -448,6 +469,88 @@ export function registerBotRoutes(app: Express) {
     } catch (error: any) {
       console.error("License info error:", error);
       res.status(500).json({ error: "Failed to get license info" });
+    }
+  });
+
+  /**
+   * @swagger
+   * /bot/shutdown-ack:
+   *   post:
+   *     summary: Acknowledge shutdown
+   *     description: Bot calls this endpoint to acknowledge that it received the shutdown command and is shutting down
+   *     tags: [Bot Integration]
+   *     security:
+   *       - BotApiKey: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - licenseKey
+   *             properties:
+   *               licenseKey:
+   *                 type: string
+   *                 example: "DISC-XXXX-XXXX-XXXX"
+   *                 description: The license key
+   *     responses:
+   *       200:
+   *         description: Shutdown acknowledged
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 message:
+   *                   type: string
+   *       401:
+   *         description: Invalid or missing API key
+   *       404:
+   *         description: License not found
+   */
+  app.post("/api/bot/shutdown-ack", verifyBotApiKey, rateLimit, async (req, res) => {
+    try {
+      const { licenseKey } = req.body;
+
+      if (!licenseKey) {
+        return res.status(400).json({ error: "License key required" });
+      }
+
+      const license = await storage.getLicenseByKey(licenseKey);
+
+      if (!license) {
+        return res.status(404).json({ error: "License not found" });
+      }
+
+      // Clear the shutdown flag so bot can restart
+      await storage.updateLicense(license.id, {
+        isShutdownRequested: false,
+        shutdownClearedAt: new Date(),
+      });
+
+      // Log the shutdown acknowledgment
+      await storage.createBotEvent({
+        licenseId: license.id,
+        eventType: "shutdown_acknowledged",
+        reason: license.shutdownReason,
+        metadata: {
+          guildId: license.guildId,
+          guildName: license.guildName,
+          botVersion: license.botVersion,
+          ipAddress: req.ip || req.socket.remoteAddress,
+        }
+      });
+
+      res.json({
+        success: true,
+        message: "Shutdown acknowledged and flag cleared"
+      });
+    } catch (error: any) {
+      console.error("Shutdown ack error:", error);
+      res.status(500).json({ error: "Failed to acknowledge shutdown" });
     }
   });
 }

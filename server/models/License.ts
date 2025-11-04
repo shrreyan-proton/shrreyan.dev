@@ -19,6 +19,13 @@ export interface ILicense extends Document {
   lastHeartbeat?: Date;
   lastIpAddress?: string;
   activationCount: number;
+  isShutdownRequested?: boolean;
+  shutdownRequestedAt?: Date;
+  shutdownClearedAt?: Date;
+  shutdownReason?: string;
+  guildName?: string;
+  guildInviteUrl?: string;
+  botVersion?: string;
 }
 
 const LicenseSchema = new Schema<ILicense>({
@@ -86,6 +93,28 @@ const LicenseSchema = new Schema<ILicense>({
   activationCount: {
     type: Number,
     default: 0,
+  },
+  isShutdownRequested: {
+    type: Boolean,
+    default: false,
+  },
+  shutdownRequestedAt: {
+    type: Date,
+  },
+  shutdownClearedAt: {
+    type: Date,
+  },
+  shutdownReason: {
+    type: String,
+  },
+  guildName: {
+    type: String,
+  },
+  guildInviteUrl: {
+    type: String,
+  },
+  botVersion: {
+    type: String,
   },
 });
 

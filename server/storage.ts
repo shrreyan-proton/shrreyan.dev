@@ -1,8 +1,9 @@
-import { type User as UserType, type InsertUser, type License as LicenseType, type InsertLicense, type BotApiKey as BotApiKeyType, type InsertBotApiKey } from "@shared/schema";
+import { type User as UserType, type InsertUser, type License as LicenseType, type InsertLicense, type BotApiKey as BotApiKeyType, type InsertBotApiKey, type BotEvent as BotEventType, type InsertBotEvent } from "@shared/schema";
 import { User } from "./models/User";
 import { License } from "./models/License";
 import { DiscordConfig } from "./models/DiscordConfig";
 import { BotApiKey } from "./models/BotApiKey";
+import { BotEvent } from "./models/BotEvent";
 import bcrypt from "bcryptjs";
 
 export interface DiscordConfigType {
@@ -41,6 +42,10 @@ export interface IStorage {
   listBotApiKeys(): Promise<BotApiKeyType[]>;
   updateBotApiKey(id: string, updates: Partial<InsertBotApiKey>): Promise<BotApiKeyType | null>;
   deleteBotApiKey(id: string): Promise<boolean>;
+
+  // Bot Event methods
+  createBotEvent(event: InsertBotEvent): Promise<BotEventType>;
+  getBotEventsByLicenseId(licenseId: string, limit?: number): Promise<BotEventType[]>;
 }
 
 export class MongoStorage implements IStorage {
@@ -204,6 +209,19 @@ export class MongoStorage implements IStorage {
     return result !== null;
   }
 
+  // Bot Event methods
+  async createBotEvent(insertEvent: InsertBotEvent): Promise<BotEventType> {
+    const event = await BotEvent.create(insertEvent);
+    return this.formatBotEvent(event);
+  }
+
+  async getBotEventsByLicenseId(licenseId: string, limit: number = 50): Promise<BotEventType[]> {
+    const events = await BotEvent.find({ licenseId })
+      .sort({ timestamp: -1 })
+      .limit(limit);
+    return events.map((event) => this.formatBotEvent(event));
+  }
+
   // Helper methods
   private formatUser(user: any): UserType {
     return {
@@ -242,6 +260,13 @@ export class MongoStorage implements IStorage {
       lastHeartbeat: license.lastHeartbeat,
       lastIpAddress: license.lastIpAddress,
       activationCount: license.activationCount || 0,
+      isShutdownRequested: license.isShutdownRequested || false,
+      shutdownRequestedAt: license.shutdownRequestedAt,
+      shutdownClearedAt: license.shutdownClearedAt,
+      shutdownReason: license.shutdownReason,
+      guildName: license.guildName,
+      guildInviteUrl: license.guildInviteUrl,
+      botVersion: license.botVersion,
     };
   }
 
@@ -255,6 +280,17 @@ export class MongoStorage implements IStorage {
       lastUsedAt: apiKey.lastUsedAt,
       lastUsedIp: apiKey.lastUsedIp,
       createdAt: apiKey.createdAt,
+    };
+  }
+
+  private formatBotEvent(event: any): BotEventType {
+    return {
+      id: event._id.toString(),
+      licenseId: event.licenseId.toString(),
+      eventType: event.eventType,
+      timestamp: event.timestamp,
+      reason: event.reason,
+      metadata: event.metadata,
     };
   }
 }

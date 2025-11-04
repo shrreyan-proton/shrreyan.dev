@@ -19,6 +19,7 @@ import ProfilePage from "@/pages/ProfilePage";
 import MyLicensesPage from "@/pages/MyLicensesPage";
 import ProductsPage from "@/pages/ProductsPage";
 import DocsPage from "@/pages/DocsPage";
+import BotMonitorPage from "@/pages/BotMonitorPage";
 
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -86,6 +87,9 @@ function Router() {
         </Route>
         <Route path="/licenses">
           <AdminRoute component={LicensesPage} />
+        </Route>
+        <Route path="/bots">
+          <AdminRoute component={BotMonitorPage} />
         </Route>
         <Route path="/users">
           <AdminRoute component={UsersPage} />

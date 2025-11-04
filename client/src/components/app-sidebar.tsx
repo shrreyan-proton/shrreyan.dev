@@ -1,4 +1,4 @@
-import { Home, Key, Users, Settings, LogOut, User, UserCircle, Package, Shield, UserCog, ShoppingBag, BookOpen } from "lucide-react";
+import { Home, Key, Users, Settings, LogOut, User, UserCircle, Package, Shield, UserCog, ShoppingBag, BookOpen, Activity } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -36,6 +36,12 @@ const adminMenuItems = [
     url: "/licenses",
     icon: Key,
     testId: "link-licenses",
+  },
+  {
+    title: "Bot Monitor",
+    url: "/bots",
+    icon: Activity,
+    testId: "link-bots",
   },
   {
     title: "Users",

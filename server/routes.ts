@@ -734,6 +734,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bot Management Admin Routes
+  app.get("/api/admin/bots", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const licenses = await storage.listLicenses();
+      
+      // Filter to only licenses with active bots (has guildId or recent heartbeat)
+      const activeBots = licenses
+        .filter(license => license.guildId || license.lastHeartbeat)
+        .map(license => {
+          const lastHeartbeat = license.lastHeartbeat ? new Date(license.lastHeartbeat) : null;
+          const now = new Date();
+          const minutesSinceHeartbeat = lastHeartbeat 
+            ? Math.floor((now.getTime() - lastHeartbeat.getTime()) / 60000)
+            : null;
+          
+          // Bot is online if heartbeat within last 10 minutes
+          const isOnline = minutesSinceHeartbeat !== null && minutesSinceHeartbeat < 10;
+          
+          return {
+            id: license.id,
+            licenseKey: license.key,
+            productName: license.productName,
+            guildId: license.guildId,
+            guildName: license.guildName,
+            guildInviteUrl: license.guildInviteUrl,
+            botVersion: license.botVersion,
+            status: license.isShutdownRequested ? 'shutting_down' : (isOnline ? 'online' : 'offline'),
+            lastHeartbeat: license.lastHeartbeat,
+            lastIpAddress: license.lastIpAddress,
+            activatedAt: license.activatedAt,
+            isShutdownRequested: license.isShutdownRequested,
+            shutdownReason: license.shutdownReason,
+            shutdownRequestedAt: license.shutdownRequestedAt,
+          };
+        });
+
+      res.json(activeBots);
+    } catch (error) {
+      console.error("Failed to fetch bots:", error);
+      res.status(500).json({ error: "Failed to fetch bots" });
+    }
+  });
+
+  app.post("/api/admin/bots/:id/shutdown", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      const license = await storage.getLicense(id);
+      if (!license) {
+        return res.status(404).json({ error: "License not found" });
+      }
+
+      // Set shutdown flag
+      await storage.updateLicense(id, {
+        isShutdownRequested: true,
+        shutdownRequestedAt: new Date(),
+        shutdownReason: reason || "Shutdown requested by administrator",
+      });
+
+      // Log the shutdown request
+      await storage.createBotEvent({
+        licenseId: id,
+        eventType: "shutdown_requested",
+        reason: reason || "Shutdown requested by administrator",
+        metadata: {
+          guildId: license.guildId,
+          guildName: license.guildName,
+          triggeredBy: (req.user as any).username || (req.user as any).email,
+        }
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Shutdown request sent. Bot will shut down on next heartbeat check." 
+      });
+    } catch (error) {
+      console.error("Failed to shutdown bot:", error);
+      res.status(500).json({ error: "Failed to shutdown bot" });
+    }
+  });
+
+  app.post("/api/admin/bots/:id/clear-shutdown", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const license = await storage.getLicense(id);
+      if (!license) {
+        return res.status(404).json({ error: "License not found" });
+      }
+
+      // Clear shutdown flag
+      await storage.updateLicense(id, {
+        isShutdownRequested: false,
+        shutdownClearedAt: new Date(),
+        shutdownReason: undefined,
+      });
+
+      // Log the shutdown clear
+      await storage.createBotEvent({
+        licenseId: id,
+        eventType: "shutdown_cleared",
+        metadata: {
+          guildId: license.guildId,
+          guildName: license.guildName,
+          triggeredBy: (req.user as any).username || (req.user as any).email,
+        }
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Shutdown flag cleared. Bot can restart normally." 
+      });
+    } catch (error) {
+      console.error("Failed to clear shutdown:", error);
+      res.status(500).json({ error: "Failed to clear shutdown" });
+    }
+  });
+
+  app.get("/api/admin/bots/:id/events", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const limit = parseInt(req.query.limit as string) || 50;
+
+      const license = await storage.getLicense(id);
+      if (!license) {
+        return res.status(404).json({ error: "License not found" });
+      }
+
+      const events = await storage.getBotEventsByLicenseId(id, limit);
+      res.json(events);
+    } catch (error) {
+      console.error("Failed to fetch bot events:", error);
+      res.status(500).json({ error: "Failed to fetch bot events" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

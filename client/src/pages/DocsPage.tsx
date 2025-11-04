@@ -314,9 +314,14 @@ class LicenseManager:
             return False
             
         headers = {"x-api-key": API_KEY}
+        
+        # Send bot metadata with heartbeat
         data = {
             "licenseKey": LICENSE_KEY,
-            "guildId": self.guild_id
+            "guildId": self.guild_id,
+            "botVersion": "1.0.0",  # Your bot version
+            "guildName": self.bot.guilds[0].name if self.bot.guilds else None,
+            "guildInviteUrl": None  # Optional: Discord invite link
         }
         
         try:
@@ -331,11 +336,35 @@ class LicenseManager:
             
             if not self.is_valid:
                 print(f"⚠️ License invalid: {result.get('error')}")
+                return False
+            
+            # Check for remote shutdown request
+            action = result.get("action")
+            if action and action.get("type") == "shutdown":
+                reason = action.get("reason", "Unknown")
+                print(f"🛑 Remote shutdown requested: {reason}")
+                await self.acknowledge_shutdown()
+                return "shutdown"
                 
-            return self.is_valid
+            return True
         except Exception as e:
             print(f"❌ License verification error: {e}")
             return False
+    
+    async def acknowledge_shutdown(self):
+        """Acknowledge that shutdown command was received"""
+        headers = {"x-api-key": API_KEY}
+        data = {"licenseKey": LICENSE_KEY}
+        
+        try:
+            requests.post(
+                f"{BASE_URL}/api/bot/shutdown-ack",
+                headers=headers,
+                json=data
+            )
+            print("✅ Shutdown acknowledged")
+        except Exception as e:
+            print(f"❌ Failed to acknowledge shutdown: {e}")
 
 # Create bot instance
 intents = discord.Intents.default()
@@ -364,8 +393,11 @@ async def on_ready():
 @tasks.loop(hours=3)  # Check every 3 hours
 async def heartbeat_task():
     """Periodic license verification"""
-    valid = await license_manager.verify_license()
-    if not valid:
+    result = await license_manager.verify_license()
+    if result == "shutdown":
+        print("🛑 Shutting down bot as requested by administrator...")
+        await bot.close()
+    elif not result:
         print("❌ License invalid! Shutting down bot.")
         await bot.close()
 
@@ -441,11 +473,16 @@ class LicenseManager {
     if (!this.guildId) return false;
 
     try {
+      const guild = this.client.guilds.cache.get(this.guildId);
+      
       const response = await axios.post(
         \`\${BASE_URL}/api/bot/verify\`,
         {
           licenseKey: LICENSE_KEY,
-          guildId: this.guildId
+          guildId: this.guildId,
+          botVersion: "1.0.0",  // Your bot version
+          guildName: guild?.name,
+          guildInviteUrl: null  // Optional: Discord invite link
         },
         {
           headers: { 'x-api-key': API_KEY }
@@ -456,12 +493,35 @@ class LicenseManager {
 
       if (!this.isValid) {
         console.log(\`⚠️ License invalid: \${response.data.error}\`);
+        return false;
       }
 
-      return this.isValid;
+      // Check for remote shutdown request
+      const action = response.data.action;
+      if (action && action.type === 'shutdown') {
+        const reason = action.reason || 'Unknown';
+        console.log(\`🛑 Remote shutdown requested: \${reason}\`);
+        await this.acknowledgeShutdown();
+        return 'shutdown';
+      }
+
+      return true;
     } catch (error) {
       console.error(\`❌ License verification error:\`, error.message);
       return false;
+    }
+  }
+
+  async acknowledgeShutdown() {
+    try {
+      await axios.post(
+        \`\${BASE_URL}/api/bot/shutdown-ack\`,
+        { licenseKey: LICENSE_KEY },
+        { headers: { 'x-api-key': API_KEY } }
+      );
+      console.log('✅ Shutdown acknowledged');
+    } catch (error) {
+      console.error(\`❌ Failed to acknowledge shutdown:\`, error.message);
     }
   }
 }
@@ -487,8 +547,11 @@ client.once('ready', async () => {
     if (activated) {
       // Start heartbeat checks every 3 hours
       setInterval(async () => {
-        const valid = await licenseManager.verifyLicense();
-        if (!valid) {
+        const result = await licenseManager.verifyLicense();
+        if (result === 'shutdown') {
+          console.error('🛑 Shutting down bot as requested by administrator...');
+          process.exit(0);
+        } else if (!result) {
           console.error('❌ License invalid! Shutting down bot.');
           process.exit(1);
         }
