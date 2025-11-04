@@ -24,7 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import logoImage from "@assets/logo_1762262685070.png";
 
-const menuItems = [
+const adminMenuItems = [
   {
     title: "Dashboard",
     url: "/",
@@ -51,9 +51,20 @@ const menuItems = [
   },
 ];
 
+const userMenuItems = [
+  {
+    title: "My Licenses",
+    url: "/",
+    icon: Key,
+    testId: "link-my-licenses",
+  },
+];
+
 export function AppSidebar() {
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
+  
+  const menuItems = user?.isAdmin ? adminMenuItems : userMenuItems;
 
   const handleLogout = async () => {
     try {
@@ -134,13 +145,15 @@ export function AppSidebar() {
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => setLocation("/settings")}
-              data-testid="menu-item-settings"
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-            </DropdownMenuItem>
+            {user?.isAdmin && (
+              <DropdownMenuItem
+                onClick={() => setLocation("/settings")}
+                data-testid="menu-item-settings"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleLogout}

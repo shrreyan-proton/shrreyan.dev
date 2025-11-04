@@ -15,6 +15,7 @@ import LicensesPage from "@/pages/LicensesPage";
 import UsersPage from "@/pages/UsersPage";
 import SettingsPage from "@/pages/SettingsPage";
 import ProfilePage from "@/pages/ProfilePage";
+import MyLicensesPage from "@/pages/MyLicensesPage";
 
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -35,6 +36,16 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
       </div>
     </SidebarProvider>
   );
+}
+
+function AdminRoute({ component: Component }: { component: React.ComponentType }) {
+  const { user } = useAuth();
+  
+  if (!user?.isAdmin) {
+    return <Redirect to="/" />;
+  }
+  
+  return <Component />;
 }
 
 function Router() {
@@ -64,11 +75,19 @@ function Router() {
   return (
     <AuthenticatedLayout>
       <Switch>
-        <Route path="/" component={DashboardPage} />
-        <Route path="/licenses" component={LicensesPage} />
-        <Route path="/users" component={UsersPage} />
+        <Route path="/">
+          {user?.isAdmin ? <DashboardPage /> : <MyLicensesPage />}
+        </Route>
+        <Route path="/licenses">
+          <AdminRoute component={LicensesPage} />
+        </Route>
+        <Route path="/users">
+          <AdminRoute component={UsersPage} />
+        </Route>
+        <Route path="/settings">
+          <AdminRoute component={SettingsPage} />
+        </Route>
         <Route path="/profile" component={ProfilePage} />
-        <Route path="/settings" component={SettingsPage} />
         <Route component={NotFound} />
       </Switch>
     </AuthenticatedLayout>
