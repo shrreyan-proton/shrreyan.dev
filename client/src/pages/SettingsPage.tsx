@@ -1,11 +1,73 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SiDiscord } from "react-icons/si";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+
+interface DiscordConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+}
 
 export default function SettingsPage() {
+  const { toast } = useToast();
+  const [config, setConfig] = useState<DiscordConfig>({
+    clientId: "",
+    clientSecret: "",
+    redirectUri: "",
+  });
+
+  const { data: discordConfig, isLoading } = useQuery<DiscordConfig>({
+    queryKey: ["/api/discord-config"],
+  });
+
+  useEffect(() => {
+    if (discordConfig) {
+      setConfig(discordConfig);
+    }
+  }, [discordConfig]);
+
+  const saveConfigMutation = useMutation({
+    mutationFn: async (data: DiscordConfig) => {
+      return apiRequest("/api/discord-config", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/discord-config"] });
+      toast({
+        title: "Success",
+        description: "Discord OAuth settings saved successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save Discord settings",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSaveDiscord = () => {
+    if (!config.clientId || !config.clientSecret || !config.redirectUri) {
+      toast({
+        title: "Validation Error",
+        description: "All fields are required",
+        variant: "destructive",
+      });
+      return;
+    }
+    saveConfigMutation.mutate(config);
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -28,6 +90,9 @@ export default function SettingsPage() {
                 id="client-id"
                 placeholder="Enter your Discord application client ID"
                 data-testid="input-client-id"
+                value={config.clientId}
+                onChange={(e) => setConfig({ ...config, clientId: e.target.value })}
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -37,19 +102,29 @@ export default function SettingsPage() {
                 type="password"
                 placeholder="Enter your Discord application client secret"
                 data-testid="input-client-secret"
+                value={config.clientSecret}
+                onChange={(e) => setConfig({ ...config, clientSecret: e.target.value })}
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="redirect-uri">Redirect URI</Label>
               <Input
                 id="redirect-uri"
-                placeholder="https://yourapp.com/auth/discord/callback"
+                placeholder="https://yourapp.com/api/auth/discord/callback"
                 data-testid="input-redirect-uri"
+                value={config.redirectUri}
+                onChange={(e) => setConfig({ ...config, redirectUri: e.target.value })}
+                disabled={isLoading}
               />
             </div>
-            <Button data-testid="button-save-discord">
+            <Button 
+              data-testid="button-save-discord"
+              onClick={handleSaveDiscord}
+              disabled={saveConfigMutation.isPending || isLoading}
+            >
               <SiDiscord className="h-4 w-4 mr-2" />
-              Save Discord Settings
+              {saveConfigMutation.isPending ? "Saving..." : "Save Discord Settings"}
             </Button>
           </CardContent>
         </Card>
