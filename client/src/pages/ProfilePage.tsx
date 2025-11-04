@@ -26,7 +26,6 @@ export default function ProfilePage() {
     confirmPassword: "",
   });
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -51,8 +50,12 @@ export default function ProfilePage() {
         confirmPassword: "",
       });
       setUploadDialogOpen(false);
-      setSelectedFile(null);
       setPreviewUrl(null);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     },
     onError: (error: any) => {
       toast({
@@ -168,10 +171,10 @@ export default function ProfilePage() {
       pixelCrop.height
     );
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => {
         if (!blob) {
-          resolve('');
+          reject(new Error('Failed to create image blob'));
           return;
         }
         const reader = new FileReader();
@@ -207,7 +210,6 @@ export default function ProfilePage() {
       return;
     }
 
-    setSelectedFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewUrl(reader.result as string);
@@ -463,7 +465,6 @@ export default function ProfilePage() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setSelectedFile(null);
                       setPreviewUrl(null);
                       setCrop({ x: 0, y: 0 });
                       setZoom(1);
