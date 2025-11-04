@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // User Schema
-export const userRoleEnum = z.enum(["user", "customer", "staff", "admin"]);
+export const userRoleEnum = z.enum(["user", "customer", "staff", "admin", "founder"]);
 
 export const insertUserSchema = z.object({
   username: z.string().min(3),

@@ -140,6 +140,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
                   <SelectItem value="customer">Customer</SelectItem>
                   <SelectItem value="staff">Staff</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="founder">Founder</SelectItem>
                 </SelectContent>
               </Select>
               {isProtectedAdmin && (

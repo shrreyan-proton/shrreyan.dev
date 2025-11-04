@@ -23,7 +23,7 @@ export type User = {
   username?: string;
   discordId?: string;
   discordUsername?: string;
-  role: "user" | "customer" | "staff" | "admin";
+  role: "user" | "customer" | "staff" | "admin" | "founder";
   isAdmin: boolean;
   profilePicture?: string;
   licensesCount: number;
@@ -46,6 +46,13 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
 
   const getRoleBadge = (role: string) => {
     switch (role) {
+      case "founder":
+        return (
+          <Badge variant="outline" className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" data-testid="badge-role-founder">
+            <Crown className="h-3 w-3 mr-1 fill-amber-500" />
+            Founder
+          </Badge>
+        );
       case "admin":
         return (
           <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20" data-testid="badge-role-admin">
