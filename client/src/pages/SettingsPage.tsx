@@ -5,14 +5,38 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SiDiscord } from "react-icons/si";
+import { Key, Copy, Trash2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface DiscordConfig {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
+}
+
+interface BotApiKey {
+  id: string;
+  name: string;
+  keyHash: string;
+  keyPrefix: string;
+  isActive: boolean;
+  lastUsedAt?: string;
+  lastUsedIp?: string;
+  createdAt: string;
+  key?: string; // Only present on creation
 }
 
 export default function SettingsPage() {
@@ -22,9 +46,16 @@ export default function SettingsPage() {
     clientSecret: "",
     redirectUri: "",
   });
+  const [newApiKeyName, setNewApiKeyName] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedApiKey, setSelectedApiKey] = useState<BotApiKey | null>(null);
 
   const { data: discordConfig, isLoading } = useQuery<DiscordConfig>({
     queryKey: ["/api/discord-config"],
+  });
+
+  const { data: apiKeys = [], isLoading: isLoadingKeys } = useQuery<BotApiKey[]>({
+    queryKey: ["/api/bot-api-keys"],
   });
 
   useEffect(() => {
@@ -63,6 +94,78 @@ export default function SettingsPage() {
       return;
     }
     saveConfigMutation.mutate(config);
+  };
+
+  const createApiKeyMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiRequest("POST", "/api/bot-api-keys", { name });
+      return await res.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bot-api-keys"] });
+      setNewApiKeyName("");
+      if (data.key) {
+        navigator.clipboard.writeText(data.key);
+        toast({
+          title: "API Key Created",
+          description: "The key has been copied to your clipboard. Save it now - you won't see it again!",
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create API key",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteApiKeyMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/bot-api-keys/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bot-api-keys"] });
+      toast({
+        title: "Success",
+        description: "API key deleted successfully",
+      });
+      setDeleteDialogOpen(false);
+      setSelectedApiKey(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete API key",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCreateApiKey = () => {
+    if (!newApiKeyName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a name for the API key",
+        variant: "destructive",
+      });
+      return;
+    }
+    createApiKeyMutation.mutate(newApiKeyName);
+  };
+
+  const handleCopyKey = (keyPrefix: string) => {
+    toast({
+      title: "Cannot Copy",
+      description: "Full API key is only shown once at creation. This shows the prefix only.",
+      variant: "destructive",
+    });
+  };
+
+  const handleDeleteKey = (apiKey: BotApiKey) => {
+    setSelectedApiKey(apiKey);
+    setDeleteDialogOpen(true);
   };
 
   return (
@@ -128,6 +231,91 @@ export default function SettingsPage() {
 
         <Card>
           <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              Bot API Keys
+            </CardTitle>
+            <CardDescription>
+              Manage API keys for your Discord bot to verify licenses
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter API key name (e.g., My Discord Bot)"
+                value={newApiKeyName}
+                onChange={(e) => setNewApiKeyName(e.target.value)}
+                data-testid="input-api-key-name"
+              />
+              <Button
+                onClick={handleCreateApiKey}
+                disabled={createApiKeyMutation.isPending || isLoadingKeys}
+                data-testid="button-create-api-key"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create
+              </Button>
+            </div>
+
+            {isLoadingKeys ? (
+              <div className="text-sm text-muted-foreground">Loading API keys...</div>
+            ) : apiKeys.length === 0 ? (
+              <div className="text-sm text-muted-foreground">
+                No API keys yet. Create one to get started.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {apiKeys.map((apiKey) => (
+                  <div
+                    key={apiKey.id}
+                    className="flex items-center justify-between p-3 border rounded-md"
+                    data-testid={`api-key-item-${apiKey.id}`}
+                  >
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{apiKey.name}</span>
+                        <Badge variant={apiKey.isActive ? "default" : "secondary"}>
+                          {apiKey.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground font-mono">
+                        {apiKey.keyPrefix}••••••••••••••••••••••••••••••••••••••••
+                      </div>
+                      {apiKey.lastUsedAt && (
+                        <div className="text-xs text-muted-foreground">
+                          Last used: {new Date(apiKey.lastUsedAt).toLocaleString()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleCopyKey(apiKey.keyPrefix)}
+                        data-testid={`button-copy-key-${apiKey.id}`}
+                        disabled
+                        title="Full key only shown once at creation"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleDeleteKey(apiKey)}
+                        data-testid={`button-delete-key-${apiKey.id}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Database Configuration</CardTitle>
             <CardDescription>
               PostgreSQL database connection settings
@@ -170,6 +358,27 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete API Key</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the API key "{selectedApiKey?.name}"?
+              This action cannot be undone and will revoke access for any bot using this key.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => selectedApiKey && deleteApiKeyMutation.mutate(selectedApiKey.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -18,6 +18,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import MyLicensesPage from "@/pages/MyLicensesPage";
 import ProductsPage from "@/pages/ProductsPage";
+import DocsPage from "@/pages/DocsPage";
 
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -94,6 +95,9 @@ function Router() {
         </Route>
         <Route path="/profile" component={ProfilePage} />
         <Route path="/products" component={ProductsPage} />
+        <Route path="/docs">
+          <AdminRoute component={DocsPage} />
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </AuthenticatedLayout>

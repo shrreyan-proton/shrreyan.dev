@@ -14,6 +14,11 @@ export interface ILicense extends Document {
   ipWhitelist?: string[];
   discordUserId?: string;
   note?: string;
+  guildId?: string;
+  activatedAt?: Date;
+  lastHeartbeat?: Date;
+  lastIpAddress?: string;
+  activationCount: number;
 }
 
 const LicenseSchema = new Schema<ILicense>({
@@ -65,6 +70,22 @@ const LicenseSchema = new Schema<ILicense>({
   },
   note: {
     type: String,
+  },
+  guildId: {
+    type: String,
+  },
+  activatedAt: {
+    type: Date,
+  },
+  lastHeartbeat: {
+    type: Date,
+  },
+  lastIpAddress: {
+    type: String,
+  },
+  activationCount: {
+    type: Number,
+    default: 0,
   },
 });
 

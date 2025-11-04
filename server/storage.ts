@@ -1,7 +1,8 @@
-import { type User as UserType, type InsertUser, type License as LicenseType, type InsertLicense } from "@shared/schema";
+import { type User as UserType, type InsertUser, type License as LicenseType, type InsertLicense, type BotApiKey as BotApiKeyType, type InsertBotApiKey } from "@shared/schema";
 import { User } from "./models/User";
 import { License } from "./models/License";
 import { DiscordConfig } from "./models/DiscordConfig";
+import { BotApiKey } from "./models/BotApiKey";
 import bcrypt from "bcryptjs";
 
 export interface DiscordConfigType {
@@ -32,6 +33,14 @@ export interface IStorage {
   // Discord config methods
   getDiscordConfig(): Promise<DiscordConfigType | null>;
   saveDiscordConfig(config: DiscordConfigType): Promise<DiscordConfigType>;
+
+  // Bot API Key methods
+  getBotApiKey(id: string): Promise<BotApiKeyType | null>;
+  getBotApiKeyByKey(key: string): Promise<BotApiKeyType | null>;
+  createBotApiKey(apiKey: InsertBotApiKey): Promise<BotApiKeyType>;
+  listBotApiKeys(): Promise<BotApiKeyType[]>;
+  updateBotApiKey(id: string, updates: Partial<InsertBotApiKey>): Promise<BotApiKeyType | null>;
+  deleteBotApiKey(id: string): Promise<boolean>;
 }
 
 export class MongoStorage implements IStorage {
@@ -156,6 +165,45 @@ export class MongoStorage implements IStorage {
     }
   }
 
+  // Bot API Key methods
+  async getBotApiKey(id: string): Promise<BotApiKeyType | null> {
+    const apiKey = await BotApiKey.findById(id);
+    return apiKey ? this.formatBotApiKey(apiKey) : null;
+  }
+
+  async getBotApiKeyByKey(key: string): Promise<BotApiKeyType | null> {
+    const allKeys = await BotApiKey.find({ isActive: true });
+    
+    for (const apiKey of allKeys) {
+      const isMatch = await bcrypt.compare(key, apiKey.keyHash);
+      if (isMatch) {
+        return this.formatBotApiKey(apiKey);
+      }
+    }
+    
+    return null;
+  }
+
+  async createBotApiKey(insertApiKey: InsertBotApiKey): Promise<BotApiKeyType> {
+    const apiKey = await BotApiKey.create(insertApiKey);
+    return this.formatBotApiKey(apiKey);
+  }
+
+  async listBotApiKeys(): Promise<BotApiKeyType[]> {
+    const apiKeys = await BotApiKey.find();
+    return apiKeys.map((apiKey) => this.formatBotApiKey(apiKey));
+  }
+
+  async updateBotApiKey(id: string, updates: Partial<InsertBotApiKey>): Promise<BotApiKeyType | null> {
+    const apiKey = await BotApiKey.findByIdAndUpdate(id, updates, { new: true });
+    return apiKey ? this.formatBotApiKey(apiKey) : null;
+  }
+
+  async deleteBotApiKey(id: string): Promise<boolean> {
+    const result = await BotApiKey.findByIdAndDelete(id);
+    return result !== null;
+  }
+
   // Helper methods
   private formatUser(user: any): UserType {
     return {
@@ -189,6 +237,24 @@ export class MongoStorage implements IStorage {
       ipWhitelist: license.ipWhitelist,
       discordUserId: license.discordUserId,
       note: license.note,
+      guildId: license.guildId,
+      activatedAt: license.activatedAt,
+      lastHeartbeat: license.lastHeartbeat,
+      lastIpAddress: license.lastIpAddress,
+      activationCount: license.activationCount || 0,
+    };
+  }
+
+  private formatBotApiKey(apiKey: any): BotApiKeyType {
+    return {
+      id: apiKey._id.toString(),
+      name: apiKey.name,
+      keyHash: apiKey.keyHash,
+      keyPrefix: apiKey.keyPrefix,
+      isActive: apiKey.isActive,
+      lastUsedAt: apiKey.lastUsedAt,
+      lastUsedIp: apiKey.lastUsedIp,
+      createdAt: apiKey.createdAt,
     };
   }
 }

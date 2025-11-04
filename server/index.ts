@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { registerRoutes } from "./routes";
+import { registerBotRoutes } from "./bot-routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { connectDB } from "./db";
 import { seedDatabase } from "./seed";
@@ -71,6 +72,9 @@ app.use((req, res, next) => {
   
   // Seed the database
   await seedDatabase();
+  
+  // Register bot API routes (before regular routes for priority)
+  registerBotRoutes(app);
   
   const server = await registerRoutes(app);
 

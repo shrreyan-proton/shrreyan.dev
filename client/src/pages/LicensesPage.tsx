@@ -50,6 +50,27 @@ export default function LicensesPage() {
     },
   });
 
+  const resetLicenseMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("POST", `/api/licenses/${id}/reset`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/licenses"] });
+      toast({
+        title: "Success",
+        description: "License binding reset successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reset license",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredLicenses = licenses.filter(
     (license) =>
       license.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -84,6 +105,7 @@ export default function LicensesPage() {
           licenses={filteredLicenses}
           onEdit={(license) => console.log("Edit license:", license)}
           onDelete={(license) => deleteLicenseMutation.mutate(license.id)}
+          onReset={(license) => resetLicenseMutation.mutate(license.id)}
         />
       )}
     </div>

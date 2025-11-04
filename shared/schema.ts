@@ -40,6 +40,11 @@ export const insertLicenseSchema = z.object({
   ipWhitelist: z.array(z.string()).optional(),
   discordUserId: z.string().optional(),
   note: z.string().optional(),
+  guildId: z.string().optional(),
+  activatedAt: z.date().optional(),
+  lastHeartbeat: z.date().optional(),
+  lastIpAddress: z.string().optional(),
+  activationCount: z.number().default(0),
 });
 
 export const licenseSchema = insertLicenseSchema.extend({
@@ -52,3 +57,21 @@ export type InsertLicense = z.infer<typeof insertLicenseSchema>;
 export type License = z.infer<typeof licenseSchema>;
 export type LicenseStatus = z.infer<typeof licenseStatusEnum>;
 export type LicenseType = z.infer<typeof licenseTypeEnum>;
+
+// Bot API Key Schema
+export const insertBotApiKeySchema = z.object({
+  name: z.string().min(1),
+  keyHash: z.string(),
+  keyPrefix: z.string(),
+  isActive: z.boolean().default(true),
+  lastUsedAt: z.date().optional(),
+  lastUsedIp: z.string().optional(),
+});
+
+export const botApiKeySchema = insertBotApiKeySchema.extend({
+  id: z.string(),
+  createdAt: z.date(),
+});
+
+export type InsertBotApiKey = z.infer<typeof insertBotApiKeySchema>;
+export type BotApiKey = z.infer<typeof botApiKeySchema>;

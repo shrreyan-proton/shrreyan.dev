@@ -12,9 +12,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, RotateCcw } from "lucide-react";
 
 export type License = {
   id: string;
@@ -24,12 +25,17 @@ export type License = {
   status: "active" | "expired" | "suspended";
   createdAt: string;
   expiresAt: string;
+  guildId?: string;
+  activatedAt?: string;
+  lastHeartbeat?: string;
+  lastIpAddress?: string;
 };
 
 interface LicenseTableProps {
   licenses: License[];
   onEdit?: (license: License) => void;
   onDelete?: (license: License) => void;
+  onReset?: (license: License) => void;
 }
 
 const statusColors = {
@@ -38,7 +44,7 @@ const statusColors = {
   suspended: "bg-red-500/10 text-red-500 border-red-500/20",
 };
 
-export function LicenseTable({ licenses, onEdit, onDelete }: LicenseTableProps) {
+export function LicenseTable({ licenses, onEdit, onDelete, onReset }: LicenseTableProps) {
   return (
     <div className="border rounded-md">
       <Table>
@@ -47,7 +53,8 @@ export function LicenseTable({ licenses, onEdit, onDelete }: LicenseTableProps) 
             <TableHead>License Key</TableHead>
             <TableHead>User</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
+            <TableHead>Guild ID</TableHead>
+            <TableHead>Last Heartbeat</TableHead>
             <TableHead>Expires</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
@@ -71,8 +78,31 @@ export function LicenseTable({ licenses, onEdit, onDelete }: LicenseTableProps) 
                   {license.status}
                 </Badge>
               </TableCell>
+              <TableCell className="text-sm text-muted-foreground font-mono">
+                {license.guildId ? (
+                  <div className="flex flex-col gap-1">
+                    <span>{license.guildId}</span>
+                    {license.activatedAt && (
+                      <span className="text-xs">
+                        Activated: {new Date(license.activatedAt).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground/50">Not bound</span>
+                )}
+              </TableCell>
               <TableCell className="text-sm text-muted-foreground">
-                {new Date(license.createdAt).toLocaleDateString()}
+                {license.lastHeartbeat ? (
+                  <div className="flex flex-col gap-1">
+                    <span>{new Date(license.lastHeartbeat).toLocaleString()}</span>
+                    {license.lastIpAddress && (
+                      <span className="text-xs font-mono">{license.lastIpAddress}</span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground/50">Never</span>
+                )}
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {new Date(license.expiresAt).toLocaleDateString()}
@@ -96,6 +126,16 @@ export function LicenseTable({ licenses, onEdit, onDelete }: LicenseTableProps) 
                       <Pencil className="h-4 w-4 mr-2" />
                       Edit
                     </DropdownMenuItem>
+                    {license.guildId && onReset && (
+                      <DropdownMenuItem
+                        onClick={() => onReset?.(license)}
+                        data-testid={`button-reset-${license.id}`}
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Reset Binding
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => onDelete?.(license)}
                       className="text-destructive"

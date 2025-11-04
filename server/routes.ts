@@ -333,6 +333,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bot API Key routes
+  app.get("/api/bot-api-keys", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const apiKeys = await storage.listBotApiKeys();
+      res.json(apiKeys);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch API keys" });
+    }
+  });
+
+  app.post("/api/bot-api-keys", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { name } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: "API key name is required" });
+      }
+
+      // Generate a secure random API key
+      const key = `lm_${randomBytes(32).toString('hex')}`;
+      const keyHash = await bcrypt.hash(key, 10);
+      const keyPrefix = key.substring(0, 12);
+
+      const apiKey = await storage.createBotApiKey({
+        name,
+        keyHash,
+        keyPrefix,
+        isActive: true,
+      });
+
+      // Return the full key ONLY on creation
+      res.json({
+        ...apiKey,
+        key, // Full key shown only once
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to create API key" });
+    }
+  });
+
+  app.patch("/api/bot-api-keys/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const apiKey = await storage.updateBotApiKey(req.params.id, req.body);
+      if (!apiKey) {
+        return res.status(404).json({ error: "API key not found" });
+      }
+      res.json(apiKey);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update API key" });
+    }
+  });
+
+  app.delete("/api/bot-api-keys/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const success = await storage.deleteBotApiKey(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "API key not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(400).json({ error: "Failed to delete API key" });
+    }
+  });
+
+  // License unbind/reset route
+  app.post("/api/licenses/:id/reset", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const license = await storage.getLicense(req.params.id);
+      if (!license) {
+        return res.status(404).json({ error: "License not found" });
+      }
+
+      const updated = await storage.updateLicense(req.params.id, {
+        guildId: undefined,
+        activatedAt: undefined,
+        lastHeartbeat: undefined,
+        lastIpAddress: undefined,
+      });
+
+      res.json({ success: true, license: updated });
+    } catch (error) {
+      res.status(400).json({ error: "Failed to reset license" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
