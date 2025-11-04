@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { User, Mail, UserCircle, Shield, Image, X, Upload, Camera } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { User, Mail, UserCircle, Shield, Image, X, Upload, Camera, ZoomIn, ZoomOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import Cropper from "react-easy-crop";
+import type { Area } from "react-easy-crop";
 
 export default function ProfilePage() {
   const { toast } = useToast();
@@ -25,6 +28,9 @@ export default function ProfilePage() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateProfileMutation = useMutation({
@@ -131,6 +137,52 @@ export default function ProfilePage() {
     });
   };
 
+  const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const createCroppedImage = useCallback(async (imageSrc: string, pixelCrop: Area): Promise<string> => {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new window.Image();
+      img.addEventListener('load', () => resolve(img));
+      img.addEventListener('error', reject);
+      img.src = imageSrc;
+    });
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('No 2d context');
+
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    ctx.drawImage(
+      image,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      pixelCrop.width,
+      pixelCrop.height
+    );
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          resolve('');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve(reader.result as string);
+        };
+        reader.readAsDataURL(blob);
+      }, 'image/jpeg', 0.95);
+    });
+  }, []);
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -159,12 +211,14 @@ export default function ProfilePage() {
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewUrl(reader.result as string);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
     };
     reader.readAsDataURL(file);
   };
 
-  const handleUploadProfilePicture = () => {
-    if (!previewUrl) {
+  const handleUploadProfilePicture = async () => {
+    if (!previewUrl || !croppedAreaPixels) {
       toast({
         title: "Validation Error",
         description: "Please select an image to upload",
@@ -173,7 +227,16 @@ export default function ProfilePage() {
       return;
     }
     
-    updateProfileMutation.mutate({ profilePicture: previewUrl });
+    try {
+      const croppedImage = await createCroppedImage(previewUrl, croppedAreaPixels);
+      updateProfileMutation.mutate({ profilePicture: croppedImage });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process image",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleRemoveProfilePicture = () => {
@@ -354,59 +417,90 @@ export default function ProfilePage() {
       </div>
 
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-        <DialogContent data-testid="dialog-upload-picture">
+        <DialogContent className="max-w-2xl" data-testid="dialog-upload-picture">
           <DialogHeader>
             <DialogTitle>Upload Profile Picture</DialogTitle>
             <DialogDescription>
-              Choose an image to use as your profile picture. Recommended size: 400x400 pixels.
+              Choose an image, then adjust the crop area and zoom to select your profile picture.
               Supported formats: PNG, JPG, WEBP (max 5MB)
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex flex-col items-center gap-4">
-              {previewUrl ? (
-                <div className="relative">
-                  <Avatar className="h-32 w-32">
-                    <AvatarImage src={previewUrl} alt="Preview" />
-                  </Avatar>
+            {previewUrl ? (
+              <>
+                <div className="relative w-full h-96 bg-muted rounded-md overflow-hidden">
+                  <Cropper
+                    image={previewUrl}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={1}
+                    cropShape="round"
+                    showGrid={false}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={onCropComplete}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <ZoomOut className="h-4 w-4 text-muted-foreground" />
+                    <Slider
+                      value={[zoom]}
+                      min={1}
+                      max={3}
+                      step={0.1}
+                      onValueChange={(value) => setZoom(value[0])}
+                      className="flex-1"
+                      data-testid="slider-zoom"
+                    />
+                    <ZoomIn className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Drag to reposition • Scroll or use slider to zoom
+                  </p>
+                </div>
+                <div className="flex justify-center">
                   <Button
                     variant="outline"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-8 w-8 rounded-full"
                     onClick={() => {
                       setSelectedFile(null);
                       setPreviewUrl(null);
+                      setCrop({ x: 0, y: 0 });
+                      setZoom(1);
                       if (fileInputRef.current) {
                         fileInputRef.current.value = '';
                       }
                     }}
                     data-testid="button-clear-preview"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-4 w-4 mr-2" />
+                    Choose Different Image
                   </Button>
                 </div>
-              ) : (
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-4 py-8">
                 <div className="flex items-center justify-center h-32 w-32 rounded-full bg-muted">
                   <Upload className="h-12 w-12 text-muted-foreground" />
                 </div>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp"
-                onChange={handleFileSelect}
-                className="hidden"
-                data-testid="input-file-upload"
-              />
-              <Button
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                data-testid="button-choose-file"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Choose Image
-              </Button>
-            </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  data-testid="input-file-upload"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  data-testid="button-choose-file"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Choose Image
+                </Button>
+              </div>
+            )}
             <div className="flex gap-2 justify-end">
               {user?.profilePicture && (
                 <Button
