@@ -46,7 +46,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
   const [formData, setFormData] = useState({
     key: "",
     userId: "",
-    duration: "12",
+    duration: "999",
     productName: "Crim Tickets",
     maxActivations: "1",
     discordUserId: "",
@@ -72,7 +72,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
     setFormData({
       key: "",
       userId: "",
-      duration: "12",
+      duration: "999",
       productName: "Crim Tickets",
       maxActivations: "1",
       discordUserId: "",

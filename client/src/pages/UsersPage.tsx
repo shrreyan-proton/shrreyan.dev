@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { UserTable } from "@/components/UserTable";
 import { CreateUserDialog } from "@/components/CreateUserDialog";
+import { EditUserDialog } from "@/components/EditUserDialog";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -10,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 export default function UsersPage() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const { data: users = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/users"],
@@ -36,6 +39,27 @@ export default function UsersPage() {
     },
   });
 
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest("PATCH", `/api/users/${id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "Success",
+        description: "User updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user",
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteUserMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await apiRequest("DELETE", `/api/users/${id}`);
@@ -49,6 +73,15 @@ export default function UsersPage() {
       });
     },
   });
+
+  const handleEdit = (user: any) => {
+    setSelectedUser(user);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = (id: string, data: any) => {
+    updateUserMutation.mutate({ id, data });
+  };
 
   const filteredUsers = users.filter(
     (user) =>
@@ -82,10 +115,17 @@ export default function UsersPage() {
       ) : (
         <UserTable
           users={filteredUsers}
-          onEdit={(user) => console.log("Edit user:", user)}
+          onEdit={handleEdit}
           onDelete={(user) => deleteUserMutation.mutate(user.id)}
         />
       )}
+
+      <EditUserDialog
+        user={selectedUser}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSubmit={handleEditSubmit}
+      />
     </div>
   );
 }
