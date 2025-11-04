@@ -206,7 +206,7 @@ export default function BotMonitorPage() {
           <CardContent>
             <div className="text-2xl font-bold">{onlineBots}</div>
             <p className="text-xs text-muted-foreground">
-              Active in last 10 minutes
+              Active in last 2 minutes
             </p>
           </CardContent>
         </Card>

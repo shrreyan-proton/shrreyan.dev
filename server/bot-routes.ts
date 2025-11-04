@@ -227,7 +227,7 @@ export function registerBotRoutes(app: Express) {
    * /bot/verify:
    *   post:
    *     summary: Verify license validity (heartbeat)
-   *     description: Checks if a license is valid, active, and authorized for the specified guild. Should be called periodically (every 1-6 hours) to ensure license remains valid.
+   *     description: Checks if a license is valid, active, and authorized for the specified guild. Should be called periodically (every 60 seconds) to ensure license remains valid.
    *     tags: [Bot Integration]
    *     security:
    *       - BotApiKey: []
