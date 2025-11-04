@@ -63,8 +63,9 @@ export function AppSidebar() {
     }
   };
 
-  const getUserInitials = (email: string) => {
-    return email.substring(0, 2).toUpperCase();
+  const getUserInitials = (username?: string) => {
+    if (!username) return "AD";
+    return username.substring(0, 2).toUpperCase();
   };
 
   return (
@@ -106,12 +107,12 @@ export function AppSidebar() {
             >
               <Avatar className="h-9 w-9">
                 <AvatarFallback className="bg-primary text-primary-foreground">
-                  {user ? getUserInitials(user.email) : "AD"}
+                  {user ? getUserInitials(user.username) : "AD"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start text-sm overflow-hidden">
                 <span className="font-medium truncate w-full">
-                  {user?.email || "Admin"}
+                  {user?.username || "Admin"}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {user?.isAdmin ? "Administrator" : "User"}

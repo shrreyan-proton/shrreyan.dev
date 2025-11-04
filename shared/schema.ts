@@ -2,6 +2,7 @@ import { z } from "zod";
 
 // User Schema
 export const insertUserSchema = z.object({
+  username: z.string().min(3),
   email: z.string().email(),
   password: z.string().min(6),
   discordId: z.string().optional(),

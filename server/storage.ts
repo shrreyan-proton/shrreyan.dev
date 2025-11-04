@@ -70,12 +70,12 @@ export class MongoStorage implements IStorage {
 
   // License methods
   async getLicense(id: string): Promise<LicenseType | null> {
-    const license = await License.findById(id).populate("userId", "email discordUsername");
+    const license = await License.findById(id).populate("userId", "username email discordUsername");
     return license ? this.formatLicense(license) : null;
   }
 
   async getLicenseByKey(key: string): Promise<LicenseType | null> {
-    const license = await License.findOne({ key }).populate("userId", "email discordUsername");
+    const license = await License.findOne({ key }).populate("userId", "username email discordUsername");
     return license ? this.formatLicense(license) : null;
   }
 
@@ -84,9 +84,7 @@ export class MongoStorage implements IStorage {
     expiresAt.setMonth(expiresAt.getMonth() + insertLicense.duration);
 
     const license = await License.create({
-      key: insertLicense.key,
-      userId: insertLicense.userId || undefined,
-      status: insertLicense.status,
+      ...insertLicense,
       expiresAt,
     });
 
@@ -94,12 +92,12 @@ export class MongoStorage implements IStorage {
   }
 
   async listLicenses(): Promise<LicenseType[]> {
-    const licenses = await License.find().populate("userId", "email discordUsername");
+    const licenses = await License.find().populate("userId", "username email discordUsername");
     return licenses.map((license) => this.formatLicense(license));
   }
 
   async updateLicense(id: string, updates: Partial<LicenseType>): Promise<LicenseType | null> {
-    const license = await License.findByIdAndUpdate(id, updates, { new: true }).populate("userId", "email discordUsername");
+    const license = await License.findByIdAndUpdate(id, updates, { new: true }).populate("userId", "username email discordUsername");
     return license ? this.formatLicense(license) : null;
   }
 
@@ -109,7 +107,7 @@ export class MongoStorage implements IStorage {
   }
 
   async getLicensesByUserId(userId: string): Promise<LicenseType[]> {
-    const licenses = await License.find({ userId }).populate("userId", "email discordUsername");
+    const licenses = await License.find({ userId }).populate("userId", "username email discordUsername");
     return licenses.map((license) => this.formatLicense(license));
   }
 
@@ -117,6 +115,7 @@ export class MongoStorage implements IStorage {
   private formatUser(user: any): UserType {
     return {
       id: user._id.toString(),
+      username: user.username,
       email: user.email,
       password: user.password,
       discordId: user.discordId,
@@ -134,7 +133,14 @@ export class MongoStorage implements IStorage {
       status: license.status,
       createdAt: license.createdAt,
       expiresAt: license.expiresAt,
-      duration: 12, // default, can be calculated from dates if needed
+      duration: license.duration || 12,
+      productName: license.productName || "Discord Bot",
+      licenseType: license.licenseType || "custom",
+      maxActivations: license.maxActivations || 1,
+      hwid: license.hwid,
+      ipWhitelist: license.ipWhitelist,
+      discordUserId: license.discordUserId,
+      note: license.note,
     };
   }
 }

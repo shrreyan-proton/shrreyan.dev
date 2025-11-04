@@ -106,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const user = await storage.getUser(license.userId);
             return {
               ...license,
-              userName: user?.email || user?.discordUsername || undefined,
+              userName: user?.username || user?.email || user?.discordUsername || undefined,
             };
           }
           return license;
