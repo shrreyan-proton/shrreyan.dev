@@ -98,13 +98,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Protect Shrreyan's founder role
-      if (existingUser.username === "shrreyango" && (req.body.role || req.body.isAdmin !== undefined)) {
+      // Protect Shrreyan's founder role (check by email to prevent bypass via username change)
+      if (existingUser.email === "shrreyango@gmail.com") {
+        if (req.body.email && req.body.email !== existingUser.email) {
+          return res.status(403).json({ error: "Cannot change founder's email" });
+        }
         if (req.body.role && req.body.role !== "founder") {
-          return res.status(403).json({ error: "Cannot change Shrreyan's founder role" });
+          return res.status(403).json({ error: "Cannot change founder's role" });
         }
         if (req.body.isAdmin === false) {
-          return res.status(403).json({ error: "Cannot change Shrreyan's admin status" });
+          return res.status(403).json({ error: "Cannot remove founder's admin status" });
         }
       }
 
@@ -126,9 +129,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Protect Shrreyan from deletion
-      if (existingUser.username === "shrreyango") {
-        return res.status(403).json({ error: "Cannot delete Shrreyan" });
+      // Protect founder from deletion (check by email)
+      if (existingUser.email === "shrreyango@gmail.com") {
+        return res.status(403).json({ error: "Cannot delete founder account" });
       }
 
       const success = await storage.deleteUser(req.params.id);

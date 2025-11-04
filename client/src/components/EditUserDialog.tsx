@@ -38,7 +38,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
     role: "customer",
   });
 
-  const isProtectedAdmin = user?.username === "shrreyango";
+  const isProtectedFounder = user?.email === "shrreyango@gmail.com";
 
   useEffect(() => {
     if (user) {
@@ -59,7 +59,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
       username: formData.username,
       email: formData.email,
       role: formData.role,
-      isAdmin: formData.role === "admin",
+      isAdmin: formData.role === "admin" || formData.role === "founder",
     };
     
     if (formData.password) {
@@ -107,8 +107,14 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
                 }
                 placeholder="user@example.com"
                 required
+                disabled={isProtectedFounder}
                 data-testid="input-edit-email"
               />
+              {isProtectedFounder && (
+                <p className="text-xs text-muted-foreground">
+                  Founder's email cannot be changed.
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-password">New Password (Optional)</Label>
@@ -130,7 +136,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
                 onValueChange={(value) =>
                   setFormData({ ...formData, role: value })
                 }
-                disabled={isProtectedAdmin}
+                disabled={isProtectedFounder}
               >
                 <SelectTrigger id="edit-role" data-testid="select-edit-role">
                   <SelectValue placeholder="Select role" />
@@ -143,9 +149,9 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
                   <SelectItem value="founder">Founder</SelectItem>
                 </SelectContent>
               </Select>
-              {isProtectedAdmin && (
+              {isProtectedFounder && (
                 <p className="text-xs text-muted-foreground">
-                  This user's role is protected and cannot be changed.
+                  This founder's role is protected and cannot be changed.
                 </p>
               )}
             </div>
