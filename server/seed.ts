@@ -19,11 +19,9 @@ export async function seedDatabase() {
       });
       console.log("✅ Founder user created: shrreyango@gmail.com");
     } else {
-      // Update existing admin user to founder role
+      // Update existing admin user to founder role (don't update password to avoid double-hashing)
       await storage.updateUser(existingAdmin.id, {
         username: existingAdmin.username || "shrreyango",
-        email: existingAdmin.email,
-        password: existingAdmin.password,
         role: "founder",
         isAdmin: true,
       });

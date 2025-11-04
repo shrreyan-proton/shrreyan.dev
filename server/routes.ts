@@ -111,6 +111,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Enforce that founder role always has admin privileges
+      if (req.body.role === "founder") {
+        req.body.isAdmin = true;
+      }
+
       const user = await storage.updateUser(req.params.id, req.body);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
