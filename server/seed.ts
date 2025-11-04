@@ -9,27 +9,25 @@ export async function seedDatabase() {
     const existingAdmin = await storage.getUserByEmail("shrreyango@gmail.com");
     
     if (!existingAdmin) {
-      // Create admin user
+      // Create admin user with founder role
       await storage.createUser({
         username: "shrreyango",
         email: "shrreyango@gmail.com",
         password: "100808",
+        role: "founder",
         isAdmin: true,
       });
-      console.log("✅ Admin user created: shrreyango@gmail.com");
+      console.log("✅ Founder user created: shrreyango@gmail.com");
     } else {
-      // Update existing admin user if it doesn't have a username
-      if (!existingAdmin.username) {
-        await storage.updateUser(existingAdmin.id, {
-          username: "shrreyango",
-          email: existingAdmin.email,
-          password: existingAdmin.password,
-          isAdmin: existingAdmin.isAdmin,
-        });
-        console.log("✅ Admin user updated with username");
-      } else {
-        console.log("ℹ️  Admin user already exists");
-      }
+      // Update existing admin user to founder role
+      await storage.updateUser(existingAdmin.id, {
+        username: existingAdmin.username || "shrreyango",
+        email: existingAdmin.email,
+        password: existingAdmin.password,
+        role: "founder",
+        isAdmin: true,
+      });
+      console.log("✅ Founder user updated: shrreyango@gmail.com");
     }
   } catch (error) {
     console.error("❌ Seeding error:", error);

@@ -38,7 +38,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
     role: "customer",
   });
 
-  const isProtectedAdmin = user?.username === "Shrreyan";
+  const isProtectedAdmin = user?.username === "shrreyango";
 
   useEffect(() => {
     if (user) {

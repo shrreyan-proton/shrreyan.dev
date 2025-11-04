@@ -98,10 +98,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Protect Shrreyan's admin role
-      if (existingUser.username === "Shrreyan" && (req.body.role || req.body.isAdmin !== undefined)) {
-        if (req.body.role && req.body.role !== "admin") {
-          return res.status(403).json({ error: "Cannot change Shrreyan's role" });
+      // Protect Shrreyan's founder role
+      if (existingUser.username === "shrreyango" && (req.body.role || req.body.isAdmin !== undefined)) {
+        if (req.body.role && req.body.role !== "founder") {
+          return res.status(403).json({ error: "Cannot change Shrreyan's founder role" });
         }
         if (req.body.isAdmin === false) {
           return res.status(403).json({ error: "Cannot change Shrreyan's admin status" });
@@ -127,7 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Protect Shrreyan from deletion
-      if (existingUser.username === "Shrreyan") {
+      if (existingUser.username === "shrreyango") {
         return res.status(403).json({ error: "Cannot delete Shrreyan" });
       }
 
