@@ -82,6 +82,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/users", isAuthenticated, isAdmin, async (req, res) => {
     try {
+      // Enforce that founder role always has admin privileges
+      if (req.body.role === "founder") {
+        req.body.isAdmin = true;
+      }
+      
       const validated = insertUserSchema.parse(req.body);
       const user = await storage.createUser(validated);
       const { password, ...userWithoutPassword } = user;
