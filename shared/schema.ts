@@ -28,7 +28,7 @@ export const insertLicenseSchema = z.object({
   duration: z.number().default(12), // months
   productName: z.string().default("Discord Bot"),
   licenseType: licenseTypeEnum.default("custom"),
-  maxActivations: z.number().optional(),
+  maxActivations: z.number().default(1),
   hwid: z.string().optional(),
   ipWhitelist: z.array(z.string()).optional(),
   discordServerId: z.string().optional(),

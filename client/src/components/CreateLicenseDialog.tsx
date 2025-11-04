@@ -32,10 +32,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
     userId: "",
     duration: "12",
     productName: "Discord Bot",
-    licenseType: "custom",
-    maxActivations: "",
-    hwid: "",
-    ipWhitelist: "",
+    maxActivations: "1",
     discordServerId: "",
     note: "",
   });
@@ -45,9 +42,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
     const submitData = {
       ...formData,
       duration: parseInt(formData.duration),
-      maxActivations: formData.maxActivations ? parseInt(formData.maxActivations) : undefined,
-      ipWhitelist: formData.ipWhitelist ? formData.ipWhitelist.split(',').map(ip => ip.trim()).filter(Boolean) : undefined,
-      hwid: formData.hwid || undefined,
+      maxActivations: parseInt(formData.maxActivations),
       discordServerId: formData.discordServerId || undefined,
       note: formData.note || undefined,
     };
@@ -58,10 +53,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
       userId: "",
       duration: "12",
       productName: "Discord Bot",
-      licenseType: "custom",
-      maxActivations: "",
-      hwid: "",
-      ipWhitelist: "",
+      maxActivations: "1",
       discordServerId: "",
       note: "",
     });
@@ -100,21 +92,24 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="licenseType">License Type</Label>
+                  <Label htmlFor="duration">Duration</Label>
                   <Select
-                    value={formData.licenseType}
+                    value={formData.duration}
                     onValueChange={(value) =>
-                      setFormData({ ...formData, licenseType: value })
+                      setFormData({ ...formData, duration: value })
                     }
                   >
-                    <SelectTrigger id="licenseType" data-testid="select-license-type">
-                      <SelectValue placeholder="Select type" />
+                    <SelectTrigger id="duration" data-testid="select-duration">
+                      <SelectValue placeholder="Select duration" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="lifetime">Lifetime</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="yearly">Yearly</SelectItem>
-                      <SelectItem value="custom">Custom</SelectItem>
+                      <SelectItem value="1">1 Month</SelectItem>
+                      <SelectItem value="3">3 Months</SelectItem>
+                      <SelectItem value="6">6 Months</SelectItem>
+                      <SelectItem value="12">12 Months</SelectItem>
+                      <SelectItem value="24">24 Months</SelectItem>
+                      <SelectItem value="36">36 Months</SelectItem>
+                      <SelectItem value="999">Lifetime</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -122,21 +117,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="duration">Duration (months)</Label>
-                  <Input
-                    id="duration"
-                    type="number"
-                    value={formData.duration}
-                    onChange={(e) =>
-                      setFormData({ ...formData, duration: e.target.value })
-                    }
-                    placeholder="12"
-                    required
-                    data-testid="input-duration"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="maxActivations">Max Activations (Optional)</Label>
+                  <Label htmlFor="maxActivations">Max Activations</Label>
                   <Input
                     id="maxActivations"
                     type="number"
@@ -144,8 +125,22 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
                     onChange={(e) =>
                       setFormData({ ...formData, maxActivations: e.target.value })
                     }
-                    placeholder="Unlimited"
+                    placeholder="1"
+                    required
+                    min="1"
                     data-testid="input-max-activations"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="discordServerId">Discord Server ID (Optional)</Label>
+                  <Input
+                    id="discordServerId"
+                    value={formData.discordServerId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, discordServerId: e.target.value })
+                    }
+                    placeholder="Restrict to specific Discord server"
+                    data-testid="input-discord-server-id"
                   />
                 </div>
               </div>
@@ -167,46 +162,6 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
                     <SelectItem value="user2">Jane Smith</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="hwid">Hardware ID (Optional)</Label>
-                <Input
-                  id="hwid"
-                  value={formData.hwid}
-                  onChange={(e) =>
-                    setFormData({ ...formData, hwid: e.target.value })
-                  }
-                  placeholder="Bind to specific hardware"
-                  data-testid="input-hwid"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="discordServerId">Discord Server ID (Optional)</Label>
-                <Input
-                  id="discordServerId"
-                  value={formData.discordServerId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, discordServerId: e.target.value })
-                  }
-                  placeholder="Restrict to specific Discord server"
-                  data-testid="input-discord-server-id"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="ipWhitelist">IP Whitelist (Optional)</Label>
-                <Textarea
-                  id="ipWhitelist"
-                  value={formData.ipWhitelist}
-                  onChange={(e) =>
-                    setFormData({ ...formData, ipWhitelist: e.target.value })
-                  }
-                  placeholder="Enter IP addresses separated by commas (e.g., 192.168.1.1, 10.0.0.1)"
-                  rows={2}
-                  data-testid="input-ip-whitelist"
-                />
               </div>
 
               <div className="space-y-2">
