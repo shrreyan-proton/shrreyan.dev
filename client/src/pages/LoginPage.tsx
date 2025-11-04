@@ -37,10 +37,7 @@ export default function LoginPage() {
   };
 
   const handleDiscordLogin = () => {
-    toast({
-      title: "Discord Login",
-      description: "Discord OAuth integration coming soon",
-    });
+    window.location.href = "/api/auth/discord";
   };
 
   return (

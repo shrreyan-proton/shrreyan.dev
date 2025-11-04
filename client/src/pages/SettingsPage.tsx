@@ -35,10 +35,7 @@ export default function SettingsPage() {
 
   const saveConfigMutation = useMutation({
     mutationFn: async (data: DiscordConfig) => {
-      return apiRequest("/api/discord-config", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", "/api/discord-config", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/discord-config"] });
