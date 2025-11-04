@@ -73,6 +73,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
     userId: "",
     duration: "999",
     productName: "Crim Tickets",
+    productDownloadUrl: "",
     maxActivations: "1",
     discordUserId: "",
     note: "",
@@ -94,6 +95,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
       duration: parseInt(formData.duration),
       maxActivations: parseInt(formData.maxActivations),
       userId: formData.userId || undefined,
+      productDownloadUrl: formData.productDownloadUrl || undefined,
       discordUserId: formData.discordUserId || undefined,
       note: formData.note || undefined,
     };
@@ -105,6 +107,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
       userId: "",
       duration: "999",
       productName: "Crim Tickets",
+      productDownloadUrl: "",
       maxActivations: "1",
       discordUserId: "",
       note: "",
@@ -193,6 +196,23 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="productDownloadUrl">Product Download URL (Optional)</Label>
+              <Input
+                id="productDownloadUrl"
+                type="url"
+                value={formData.productDownloadUrl}
+                onChange={(e) =>
+                  setFormData({ ...formData, productDownloadUrl: e.target.value })
+                }
+                placeholder="https://example.com/product.zip"
+                data-testid="input-product-download-url"
+              />
+              <p className="text-xs text-muted-foreground">
+                Users will be able to download the product from this URL
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
