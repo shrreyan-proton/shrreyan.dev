@@ -7,6 +7,7 @@ export interface IUser extends Document {
   discordId?: string;
   discordUsername?: string;
   isAdmin: boolean;
+  profilePicture?: string;
   createdAt: Date;
 }
 
@@ -39,6 +40,9 @@ const UserSchema = new Schema<IUser>({
   isAdmin: {
     type: Boolean,
     default: false,
+  },
+  profilePicture: {
+    type: String,
   },
   createdAt: {
     type: Date,

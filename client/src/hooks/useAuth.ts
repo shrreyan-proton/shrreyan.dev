@@ -8,6 +8,7 @@ interface AuthUser {
   email: string;
   isAdmin: boolean;
   discordUsername?: string;
+  profilePicture?: string;
 }
 
 export function useAuth() {

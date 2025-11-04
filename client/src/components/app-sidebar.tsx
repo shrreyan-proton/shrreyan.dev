@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import logoImage from "@assets/logo_1762262685070.png";
 
@@ -106,6 +106,9 @@ export function AppSidebar() {
               data-testid="button-profile-menu"
             >
               <Avatar className="h-9 w-9">
+                {user?.profilePicture && (
+                  <AvatarImage src={user.profilePicture} alt={user.username || "Profile"} />
+                )}
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {user ? getUserInitials(user.username) : "AD"}
                 </AvatarFallback>

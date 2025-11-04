@@ -4,8 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User, Mail, UserCircle, Shield } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { User, Mail, UserCircle, Shield, Image, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -20,10 +20,11 @@ export default function ProfilePage() {
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
+    profilePicture: "",
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: { username?: string; password?: string; currentPassword?: string; oldPassword?: string }) => {
+    mutationFn: async (data: { username?: string; password?: string; currentPassword?: string; oldPassword?: string; profilePicture?: string }) => {
       return apiRequest("PATCH", "/api/profile", data);
     },
     onSuccess: () => {
@@ -38,6 +39,7 @@ export default function ProfilePage() {
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
+        profilePicture: "",
       });
     },
     onError: (error: any) => {
@@ -123,6 +125,23 @@ export default function ProfilePage() {
     });
   };
 
+  const handleUpdateProfilePicture = () => {
+    if (!formData.profilePicture.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid image URL",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    updateProfileMutation.mutate({ profilePicture: formData.profilePicture });
+  };
+
+  const handleRemoveProfilePicture = () => {
+    updateProfileMutation.mutate({ profilePicture: "" });
+  };
+
   const getUserInitials = (username?: string) => {
     if (!username) return "U";
     return username.substring(0, 2).toUpperCase();
@@ -146,6 +165,9 @@ export default function ProfilePage() {
           <CardContent className="space-y-6">
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
+                {user?.profilePicture && (
+                  <AvatarImage src={user.profilePicture} alt={user.username || "Profile"} />
+                )}
                 <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
                   {user ? getUserInitials(user.username || user.email) : "U"}
                 </AvatarFallback>
@@ -185,6 +207,61 @@ export default function ProfilePage() {
                 </div>
               </>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Picture</CardTitle>
+            <CardDescription>
+              Set your profile picture using an image URL
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-24 w-24">
+                {user?.profilePicture && (
+                  <AvatarImage src={user.profilePicture} alt={user.username || "Profile"} />
+                )}
+                <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
+                  {user ? getUserInitials(user.username || user.email) : "U"}
+                </AvatarFallback>
+              </Avatar>
+              {user?.profilePicture && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveProfilePicture}
+                  disabled={updateProfileMutation.isPending}
+                  data-testid="button-remove-picture"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Remove Picture
+                </Button>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="profile-picture">Image URL</Label>
+              <Input
+                id="profile-picture"
+                type="url"
+                placeholder="https://example.com/image.jpg"
+                data-testid="input-profile-picture"
+                value={formData.profilePicture}
+                onChange={(e) => setFormData({ ...formData, profilePicture: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter a URL to an image you want to use as your profile picture
+              </p>
+            </div>
+            <Button
+              data-testid="button-update-picture"
+              onClick={handleUpdateProfilePicture}
+              disabled={updateProfileMutation.isPending}
+            >
+              <Image className="h-4 w-4 mr-2" />
+              {updateProfileMutation.isPending ? "Updating..." : "Update Profile Picture"}
+            </Button>
           </CardContent>
         </Card>
 

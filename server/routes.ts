@@ -130,6 +130,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updates: any = {};
       
+      // Profile picture can be updated without password
+      if (allowedUpdates.profilePicture !== undefined) {
+        updates.profilePicture = allowedUpdates.profilePicture;
+      }
+      
       // If updating username, verify password
       if (allowedUpdates.username) {
         if (!currentPassword) {

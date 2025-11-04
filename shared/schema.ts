@@ -8,6 +8,7 @@ export const insertUserSchema = z.object({
   discordId: z.string().optional(),
   discordUsername: z.string().optional(),
   isAdmin: z.boolean().default(false),
+  profilePicture: z.string().url().optional(),
 });
 
 export const userSchema = insertUserSchema.extend({
