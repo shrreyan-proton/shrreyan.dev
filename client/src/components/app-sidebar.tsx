@@ -1,4 +1,4 @@
-import { Home, Key, Users, Settings, LogOut, User, UserCircle, Package } from "lucide-react";
+import { Home, Key, Users, Settings, LogOut, User, UserCircle, Package, Shield, UserCog, ShoppingBag } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -70,6 +70,7 @@ export function AppSidebar() {
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
   
+  const effectiveRole = user?.role ?? (user?.isAdmin ? "admin" : "customer");
   const menuItems = user?.isAdmin ? adminMenuItems : userMenuItems;
 
   const handleLogout = async () => {
@@ -135,8 +136,14 @@ export function AppSidebar() {
                   {user?.username || user?.email || "Admin"}
                 </span>
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <UserCircle className="h-3 w-3" />
-                  {user?.isAdmin ? "Admin" : "Customer"}
+                  {effectiveRole === "admin" && <Shield className="h-3 w-3" />}
+                  {effectiveRole === "staff" && <UserCog className="h-3 w-3" />}
+                  {effectiveRole === "customer" && <ShoppingBag className="h-3 w-3" />}
+                  {effectiveRole === "user" && <UserCircle className="h-3 w-3" />}
+                  {effectiveRole === "admin" && "Admin"}
+                  {effectiveRole === "staff" && "Staff"}
+                  {effectiveRole === "customer" && "Customer"}
+                  {effectiveRole === "user" && "User"}
                 </span>
               </div>
             </button>

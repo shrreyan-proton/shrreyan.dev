@@ -6,6 +6,7 @@ export interface IUser extends Document {
   password: string;
   discordId?: string;
   discordUsername?: string;
+  role: "user" | "customer" | "staff" | "admin";
   isAdmin: boolean;
   profilePicture?: string;
   createdAt: Date;
@@ -36,6 +37,11 @@ const UserSchema = new Schema<IUser>({
   },
   discordUsername: {
     type: String,
+  },
+  role: {
+    type: String,
+    enum: ["user", "customer", "staff", "admin"],
+    default: "customer",
   },
   isAdmin: {
     type: Boolean,

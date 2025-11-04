@@ -1,12 +1,15 @@
 import { z } from "zod";
 
 // User Schema
+export const userRoleEnum = z.enum(["user", "customer", "staff", "admin"]);
+
 export const insertUserSchema = z.object({
   username: z.string().min(3),
   email: z.string().email(),
   password: z.string().min(6),
   discordId: z.string().optional(),
   discordUsername: z.string().optional(),
+  role: userRoleEnum.default("customer"),
   isAdmin: z.boolean().default(false),
   profilePicture: z.string().url().optional(),
 });
@@ -18,6 +21,7 @@ export const userSchema = insertUserSchema.extend({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = z.infer<typeof userSchema>;
+export type UserRole = z.infer<typeof userRoleEnum>;
 
 // License Schema
 export const licenseStatusEnum = z.enum(["active", "expired", "suspended"]);

@@ -44,7 +44,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
         username: user.username || "",
         email: user.email,
         password: "",
-        role: user.isAdmin ? "admin" : "customer",
+        role: (user as any).role || (user.isAdmin ? "admin" : "customer"),
       });
     }
   }, [user]);
@@ -56,6 +56,7 @@ export function EditUserDialog({ user, open, onOpenChange, onSubmit }: EditUserD
     const submitData: any = {
       username: formData.username,
       email: formData.email,
+      role: formData.role,
       isAdmin: formData.role === "admin",
     };
     

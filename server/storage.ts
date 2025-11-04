@@ -165,6 +165,7 @@ export class MongoStorage implements IStorage {
       password: user.password,
       discordId: user.discordId,
       discordUsername: user.discordUsername,
+      role: user.role ?? (user.isAdmin ? "admin" : "customer"),
       isAdmin: user.isAdmin,
       profilePicture: user.profilePicture,
       createdAt: user.createdAt,

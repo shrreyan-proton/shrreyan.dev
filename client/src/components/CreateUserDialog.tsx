@@ -39,6 +39,7 @@ export function CreateUserDialog({ onSubmit }: CreateUserDialogProps) {
       username: formData.username,
       email: formData.email,
       password: formData.password,
+      role: formData.role,
       isAdmin: formData.role === "admin",
     };
     console.log("Creating user:", submitData);
