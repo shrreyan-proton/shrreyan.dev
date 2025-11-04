@@ -5,6 +5,8 @@ import { registerBotRoutes } from "./bot-routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { connectDB } from "./db";
 import { seedDatabase } from "./seed";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./swagger";
 
 const app = express();
 
@@ -72,6 +74,12 @@ app.use((req, res, next) => {
   
   // Seed the database
   await seedDatabase();
+  
+  // Swagger UI Documentation
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: "License Manager API Documentation",
+  }));
   
   // Register bot API routes (before regular routes for priority)
   registerBotRoutes(app);

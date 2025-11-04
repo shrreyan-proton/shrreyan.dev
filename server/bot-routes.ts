@@ -57,7 +57,90 @@ function rateLimit(req: any, res: any, next: any) {
 }
 
 export function registerBotRoutes(app: Express) {
-  // Activate a license (bind to guild ID)
+  /**
+   * @swagger
+   * /bot/activate:
+   *   post:
+   *     summary: Activate a license
+   *     description: Binds a license to a Discord guild ID. Once activated, the license can only be used on that specific guild.
+   *     tags: [Bot Integration]
+   *     security:
+   *       - BotApiKey: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - licenseKey
+   *               - guildId
+   *             properties:
+   *               licenseKey:
+   *                 type: string
+   *                 example: "DISC-XXXX-XXXX-XXXX"
+   *                 description: The license key to activate
+   *               guildId:
+   *                 type: string
+   *                 example: "1234567890123456789"
+   *                 description: Discord guild (server) ID
+   *     responses:
+   *       200:
+   *         description: License activated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 message:
+   *                   type: string
+   *                 license:
+   *                   type: object
+   *                   properties:
+   *                     key:
+   *                       type: string
+   *                     productName:
+   *                       type: string
+   *                     expiresAt:
+   *                       type: string
+   *                       format: date-time
+   *                     status:
+   *                       type: string
+   *                     guildId:
+   *                       type: string
+   *       400:
+   *         description: Missing required fields
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Invalid or missing API key
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       403:
+   *         description: License expired, suspended, or already activated on another guild
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       404:
+   *         description: License not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       429:
+   *         description: Rate limit exceeded (100 requests per minute)
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.post("/api/bot/activate", verifyBotApiKey, rateLimit, async (req, res) => {
     try {
       const { licenseKey, guildId } = req.body;
@@ -139,7 +222,78 @@ export function registerBotRoutes(app: Express) {
     }
   });
 
-  // Verify license (heartbeat)
+  /**
+   * @swagger
+   * /bot/verify:
+   *   post:
+   *     summary: Verify license validity (heartbeat)
+   *     description: Checks if a license is valid, active, and authorized for the specified guild. Should be called periodically (every 1-6 hours) to ensure license remains valid.
+   *     tags: [Bot Integration]
+   *     security:
+   *       - BotApiKey: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - licenseKey
+   *               - guildId
+   *             properties:
+   *               licenseKey:
+   *                 type: string
+   *                 example: "DISC-XXXX-XXXX-XXXX"
+   *                 description: The license key to verify
+   *               guildId:
+   *                 type: string
+   *                 example: "1234567890123456789"
+   *                 description: Discord guild (server) ID
+   *     responses:
+   *       200:
+   *         description: License verification result
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 valid:
+   *                   type: boolean
+   *                   description: Whether the license is valid
+   *                 license:
+   *                   type: object
+   *                   description: License details (only present if valid is true)
+   *                   properties:
+   *                     key:
+   *                       type: string
+   *                     productName:
+   *                       type: string
+   *                     expiresAt:
+   *                       type: string
+   *                       format: date-time
+   *                     status:
+   *                       type: string
+   *                     guildId:
+   *                       type: string
+   *                     productDownloadUrl:
+   *                       type: string
+   *                       nullable: true
+   *                 error:
+   *                   type: string
+   *                   description: Error message (only present if valid is false)
+   *       401:
+   *         description: Invalid or missing API key
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       429:
+   *         description: Rate limit exceeded
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.post("/api/bot/verify", verifyBotApiKey, rateLimit, async (req, res) => {
     try {
       const { licenseKey, guildId } = req.body;
@@ -208,7 +362,70 @@ export function registerBotRoutes(app: Express) {
     }
   });
 
-  // Get license info (for bot to check details)
+  /**
+   * @swagger
+   * /bot/license/{key}:
+   *   get:
+   *     summary: Get license information
+   *     description: Retrieves detailed information about a license by its key
+   *     tags: [Bot Integration]
+   *     security:
+   *       - BotApiKey: []
+   *     parameters:
+   *       - in: path
+   *         name: key
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: License key
+   *         example: "DISC-XXXX-XXXX-XXXX"
+   *     responses:
+   *       200:
+   *         description: License information retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 key:
+   *                   type: string
+   *                 productName:
+   *                   type: string
+   *                 status:
+   *                   type: string
+   *                 expiresAt:
+   *                   type: string
+   *                   format: date-time
+   *                 guildId:
+   *                   type: string
+   *                   nullable: true
+   *                 activatedAt:
+   *                   type: string
+   *                   format: date-time
+   *                   nullable: true
+   *                 lastHeartbeat:
+   *                   type: string
+   *                   format: date-time
+   *                   nullable: true
+   *       401:
+   *         description: Invalid or missing API key
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       404:
+   *         description: License not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       429:
+   *         description: Rate limit exceeded
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get("/api/bot/license/:key", verifyBotApiKey, rateLimit, async (req, res) => {
     try {
       const { key } = req.params;

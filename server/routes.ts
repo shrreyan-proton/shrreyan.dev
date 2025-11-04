@@ -14,7 +14,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Discord OAuth if configured
   await initializeDiscordStrategy();
 
-  // Auth routes
+  /**
+   * @swagger
+   * /auth/login:
+   *   post:
+   *     summary: User login
+   *     description: Authenticate user with username/email and password
+   *     tags: [Authentication]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - username
+   *               - password
+   *             properties:
+   *               username:
+   *                 type: string
+   *                 description: Username or email address
+   *               password:
+   *                 type: string
+   *                 format: password
+   *     responses:
+   *       200:
+   *         description: Login successful
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 user:
+   *                   $ref: '#/components/schemas/User'
+   *       401:
+   *         description: Invalid credentials
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.post("/api/auth/login", (req, res, next) => {
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) {
@@ -33,18 +72,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })(req, res, next);
   });
 
+  /**
+   * @swagger
+   * /auth/logout:
+   *   post:
+   *     summary: User logout
+   *     description: Logout and destroy session
+   *     tags: [Authentication]
+   *     security:
+   *       - SessionAuth: []
+   *     responses:
+   *       200:
+   *         description: Logout successful
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   */
   app.post("/api/auth/logout", (req, res) => {
     req.logout(() => {
       res.json({ success: true });
     });
   });
 
+  /**
+   * @swagger
+   * /auth/me:
+   *   get:
+   *     summary: Get current user
+   *     description: Get currently authenticated user information
+   *     tags: [Authentication]
+   *     security:
+   *       - SessionAuth: []
+   *     responses:
+   *       200:
+   *         description: User information retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 user:
+   *                   $ref: '#/components/schemas/User'
+   *       401:
+   *         description: Not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get("/api/auth/me", isAuthenticated, (req, res) => {
     const { password, ...userWithoutPassword } = req.user as any;
     res.json({ user: userWithoutPassword });
   });
 
-  // Discord OAuth routes
+  /**
+   * @swagger
+   * /auth/discord:
+   *   get:
+   *     summary: Discord OAuth login
+   *     description: Initiate Discord OAuth authentication flow
+   *     tags: [Authentication]
+   *     responses:
+   *       302:
+   *         description: Redirect to Discord OAuth
+   *       400:
+   *         description: Discord OAuth not configured
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get("/api/auth/discord", async (req, res, next) => {
     const config = await storage.getDiscordConfig();
     if (!config || !config.clientId) {
@@ -60,7 +161,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })
   );
 
-  // User routes
+  /**
+   * @swagger
+   * /users:
+   *   get:
+   *     summary: List all users
+   *     description: Get list of all users with their license counts (Admin only)
+   *     tags: [Users]
+   *     security:
+   *       - SessionAuth: []
+   *     responses:
+   *       200:
+   *         description: Users retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 allOf:
+   *                   - $ref: '#/components/schemas/User'
+   *                   - type: object
+   *                     properties:
+   *                       licensesCount:
+   *                         type: integer
+   *       401:
+   *         description: Not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       403:
+   *         description: Not authorized (Admin only)
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get("/api/users", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const users = await storage.listUsers();
@@ -80,6 +216,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /users:
+   *   post:
+   *     summary: Create new user
+   *     description: Create a new user (Admin only)
+   *     tags: [Users]
+   *     security:
+   *       - SessionAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - username
+   *               - email
+   *               - password
+   *             properties:
+   *               username:
+   *                 type: string
+   *               email:
+   *                 type: string
+   *                 format: email
+   *               password:
+   *                 type: string
+   *                 format: password
+   *               isAdmin:
+   *                 type: boolean
+   *               role:
+   *                 type: string
+   *                 enum: [founder, admin, user]
+   *     responses:
+   *       200:
+   *         description: User created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/User'
+   *       400:
+   *         description: Invalid input
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       403:
+   *         description: Not authorized (Admin only)
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.post("/api/users", isAuthenticated, isAdmin, async (req, res) => {
     try {
       // Enforce that founder role always has admin privileges
@@ -208,8 +403,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // License routes
-  // Admin: Get all licenses
+  /**
+   * @swagger
+   * /licenses:
+   *   get:
+   *     summary: Get all licenses
+   *     description: Retrieve list of all licenses with user information (Admin only)
+   *     tags: [Licenses]
+   *     security:
+   *       - SessionAuth: []
+   *     responses:
+   *       200:
+   *         description: Licenses retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 allOf:
+   *                   - $ref: '#/components/schemas/License'
+   *                   - type: object
+   *                     properties:
+   *                       userName:
+   *                         type: string
+   *                         nullable: true
+   *       401:
+   *         description: Not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       403:
+   *         description: Not authorized (Admin only)
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get("/api/licenses", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const licenses = await storage.listLicenses();
@@ -231,7 +461,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User: Get only their own licenses
+  /**
+   * @swagger
+   * /licenses/my:
+   *   get:
+   *     summary: Get my licenses
+   *     description: Get licenses belonging to the authenticated user
+   *     tags: [Licenses]
+   *     security:
+   *       - SessionAuth: []
+   *     responses:
+   *       200:
+   *         description: User licenses retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/License'
+   *       401:
+   *         description: Not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get("/api/licenses/my", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
@@ -242,7 +496,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin: Create license with full control
+  /**
+   * @swagger
+   * /licenses/admin:
+   *   post:
+   *     summary: Create license
+   *     description: Create a new license with full control (Admin only)
+   *     tags: [Licenses]
+   *     security:
+   *       - SessionAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - productName
+   *               - expiresAt
+   *             properties:
+   *               key:
+   *                 type: string
+   *                 description: License key (auto-generated if not provided)
+   *               productName:
+   *                 type: string
+   *                 description: Name of the product
+   *               userId:
+   *                 type: string
+   *                 description: ID of the user to assign license to
+   *               expiresAt:
+   *                 type: string
+   *                 format: date-time
+   *                 description: License expiration date
+   *               status:
+   *                 type: string
+   *                 enum: [active, suspended, expired]
+   *               productDownloadUrl:
+   *                 type: string
+   *                 description: Download URL for the product
+   *     responses:
+   *       200:
+   *         description: License created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/License'
+   *       400:
+   *         description: Invalid input
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       403:
+   *         description: Not authorized (Admin only)
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.post("/api/licenses/admin", isAuthenticated, isAdmin, async (req, res) => {
     try {
       // Generate a random license key if not provided

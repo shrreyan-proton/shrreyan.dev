@@ -13,6 +13,33 @@ export default function DocsPage() {
         </p>
       </div>
 
+      <Card className="bg-primary/5 border-primary/20">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <Code className="h-8 w-8 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg mb-2">Interactive API Explorer</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Try out the API endpoints directly in your browser with our interactive Swagger UI documentation. 
+                Test requests, view responses, and explore all available endpoints.
+              </p>
+              <a 
+                href="/api-docs" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover-elevate active-elevate-2 font-medium text-sm"
+                data-testid="link-swagger-docs"
+              >
+                <Zap className="h-4 w-4" />
+                Open Swagger UI
+              </a>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="bot-api" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="bot-api" data-testid="tab-bot-api">Bot Integration API</TabsTrigger>
