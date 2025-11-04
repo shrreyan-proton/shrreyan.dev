@@ -11,7 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { UserPlus } from "lucide-react";
 
 interface CreateUserDialogProps {
@@ -23,15 +29,20 @@ export function CreateUserDialog({ onSubmit }: CreateUserDialogProps) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    isAdmin: false,
+    role: "user",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Creating user:", formData);
-    onSubmit?.(formData);
+    const submitData = {
+      email: formData.email,
+      password: formData.password,
+      isAdmin: formData.role === "admin",
+    };
+    console.log("Creating user:", submitData);
+    onSubmit?.(submitData);
     setOpen(false);
-    setFormData({ email: "", password: "", isAdmin: false });
+    setFormData({ email: "", password: "", role: "user" });
   };
 
   return (
@@ -79,16 +90,22 @@ export function CreateUserDialog({ onSubmit }: CreateUserDialogProps) {
                 data-testid="input-password"
               />
             </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="admin">Admin privileges</Label>
-              <Switch
-                id="admin"
-                checked={formData.isAdmin}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, isAdmin: checked })
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, role: value })
                 }
-                data-testid="switch-admin"
-              />
+              >
+                <SelectTrigger id="role" data-testid="select-role">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
