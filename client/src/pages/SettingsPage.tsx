@@ -49,6 +49,8 @@ export default function SettingsPage() {
   const [newApiKeyName, setNewApiKeyName] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedApiKey, setSelectedApiKey] = useState<BotApiKey | null>(null);
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
+  const [showKeyDialog, setShowKeyDialog] = useState(false);
 
   const { data: discordConfig, isLoading } = useQuery<DiscordConfig>({
     queryKey: ["/api/discord-config"],
@@ -105,10 +107,11 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/bot-api-keys"] });
       setNewApiKeyName("");
       if (data.key) {
-        navigator.clipboard.writeText(data.key);
-        toast({
-          title: "API Key Created",
-          description: "The key has been copied to your clipboard. Save it now - you won't see it again!",
+        setNewlyCreatedKey(data.key);
+        setShowKeyDialog(true);
+        // Try to auto-copy, but don't rely on it
+        navigator.clipboard.writeText(data.key).catch(() => {
+          // Silently fail - user can copy manually from dialog
         });
       }
     },
@@ -161,6 +164,28 @@ export default function SettingsPage() {
       description: "Full API key is only shown once at creation. This shows the prefix only.",
       variant: "destructive",
     });
+  };
+
+  const handleCopyNewKey = () => {
+    if (newlyCreatedKey) {
+      navigator.clipboard.writeText(newlyCreatedKey).then(() => {
+        toast({
+          title: "Copied!",
+          description: "API key copied to clipboard",
+        });
+      }).catch(() => {
+        toast({
+          title: "Copy Failed",
+          description: "Please manually select and copy the key",
+          variant: "destructive",
+        });
+      });
+    }
+  };
+
+  const handleCloseKeyDialog = () => {
+    setShowKeyDialog(false);
+    setNewlyCreatedKey(null);
   };
 
   const handleDeleteKey = (apiKey: BotApiKey) => {
@@ -375,6 +400,49 @@ export default function SettingsPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showKeyDialog} onOpenChange={setShowKeyDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5 text-primary" />
+              API Key Created Successfully
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p className="text-destructive font-semibold">
+                  ⚠️ Save this key now! You won't be able to see it again.
+                </p>
+                <p>Copy this API key and store it securely. You'll need it to authenticate your Discord bot.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-4">
+            <div className="relative">
+              <div className="p-3 bg-muted rounded-md border">
+                <code className="text-sm font-mono break-all select-all">
+                  {newlyCreatedKey}
+                </code>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="absolute top-2 right-2"
+                onClick={handleCopyNewKey}
+                data-testid="button-copy-new-key"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy
+              </Button>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleCloseKeyDialog} data-testid="button-close-key-dialog">
+              I've Saved the Key
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
