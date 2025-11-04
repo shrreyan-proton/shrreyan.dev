@@ -1,4 +1,4 @@
-import { Home, Key, Users, Settings, LogOut, User } from "lucide-react";
+import { Home, Key, Users, Settings, LogOut, User, UserCircle } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -114,8 +114,9 @@ export function AppSidebar() {
                 <span className="font-medium truncate w-full">
                   {user?.username || "Admin"}
                 </span>
-                <span className="text-xs text-muted-foreground">
-                  {user?.isAdmin ? "Administrator" : "User"}
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <UserCircle className="h-3 w-3" />
+                  Customer
                 </span>
               </div>
             </button>
