@@ -1,17 +1,39 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Code, Key, Shield, Zap } from "lucide-react";
+import { Code, Key, Shield, Zap, Database, Users, Settings, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function DocsPage() {
   return (
     <div className="space-y-8 max-w-5xl">
       <div>
-        <h1 className="text-3xl font-semibold" data-testid="text-page-title">Bot Integration Documentation</h1>
+        <h1 className="text-3xl font-semibold" data-testid="text-page-title">API Documentation</h1>
         <p className="text-muted-foreground mt-1">
-          Learn how to integrate secure license verification into your Discord bot
+          Complete API reference for bot integration and license management
         </p>
       </div>
 
+      <Tabs defaultValue="bot-api" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="bot-api" data-testid="tab-bot-api">Bot Integration API</TabsTrigger>
+          <TabsTrigger value="management-api" data-testid="tab-management-api">License Management API</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="bot-api" className="space-y-8 mt-8">
+          <BotApiDocs />
+        </TabsContent>
+
+        <TabsContent value="management-api" className="space-y-8 mt-8">
+          <ManagementApiDocs />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function BotApiDocs() {
+  return (
+    <>
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -520,6 +542,580 @@ client.login(process.env.DISCORD_TOKEN);`}
           </div>
         </CardContent>
       </Card>
-    </div>
+    </>
+  );
+}
+
+function ManagementApiDocs() {
+  return (
+    <>
+      <div>
+        <h2 className="text-2xl font-semibold mb-2">License Management API</h2>
+        <p className="text-muted-foreground">
+          RESTful API for managing licenses, users, and system configuration. Requires authentication.
+        </p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Database className="h-5 w-5" />
+              License Management
+            </CardTitle>
+            <CardDescription>
+              Create, update, and manage licenses
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Users className="h-5 w-5" />
+              User Management
+            </CardTitle>
+            <CardDescription>
+              Manage users and permissions
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Settings className="h-5 w-5" />
+              Configuration
+            </CardTitle>
+            <CardDescription>
+              System and OAuth settings
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Authentication</CardTitle>
+          <CardDescription>
+            All API requests require session-based authentication
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">POST</Badge>
+              <code className="text-sm font-mono">/api/auth/login</code>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Authenticate user and create session
+            </p>
+            <div className="bg-muted p-4 rounded-md space-y-2">
+              <p className="text-xs font-semibold">Request Body:</p>
+              <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "username": "admin",
+  "password": "your_password"
+}`}
+              </pre>
+              <p className="text-xs font-semibold mt-3">Response:</p>
+              <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "user": {
+    "id": "1",
+    "username": "admin",
+    "email": "admin@example.com",
+    "isAdmin": true,
+    "role": "admin"
+  }
+}`}
+              </pre>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">POST</Badge>
+              <code className="text-sm font-mono">/api/auth/logout</code>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Logout and destroy session
+            </p>
+            <div className="bg-muted p-4 rounded-md space-y-2">
+              <p className="text-xs font-semibold">Response:</p>
+              <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "success": true
+}`}
+              </pre>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">GET</Badge>
+              <code className="text-sm font-mono">/api/auth/me</code>
+              <Badge variant="outline" className="text-xs">Authenticated</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Get current authenticated user
+            </p>
+            <div className="bg-muted p-4 rounded-md space-y-2">
+              <p className="text-xs font-semibold">Response:</p>
+              <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "user": {
+    "id": "1",
+    "username": "admin",
+    "email": "admin@example.com",
+    "isAdmin": true,
+    "role": "admin"
+  }
+}`}
+              </pre>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">GET</Badge>
+              <code className="text-sm font-mono">/api/auth/discord</code>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Initiate Discord OAuth login flow (requires Discord OAuth to be configured)
+            </p>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">GET</Badge>
+              <code className="text-sm font-mono">/api/auth/discord/callback</code>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Discord OAuth callback endpoint (redirects to home after authentication)
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>License Endpoints</CardTitle>
+          <CardDescription>
+            Base URL: {window.location.origin}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="default">GET</Badge>
+                <code className="text-sm font-mono">/api/licenses</code>
+                <Badge variant="outline" className="text-xs">Admin</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Get all licenses with user information
+              </p>
+              <div className="bg-muted p-4 rounded-md space-y-2">
+                <p className="text-xs font-semibold">Response:</p>
+                <pre className="text-xs font-mono overflow-x-auto">
+{`[
+  {
+    "id": "1",
+    "key": "DISC-XXXX-XXXX-XXXX",
+    "userId": "user123",
+    "userName": "john_doe",
+    "status": "active",
+    "productName": "Discord Bot",
+    "expiresAt": "2025-12-31T23:59:59.000Z",
+    "guildId": "1234567890",
+    "activatedAt": "2024-01-15T10:30:00.000Z"
+  }
+]`}
+                </pre>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="default">GET</Badge>
+                <code className="text-sm font-mono">/api/licenses/my</code>
+                <Badge variant="outline" className="text-xs">User</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Get licenses owned by the current authenticated user
+              </p>
+              <div className="bg-muted p-4 rounded-md space-y-2">
+                <p className="text-xs font-semibold">Response:</p>
+                <pre className="text-xs font-mono overflow-x-auto">
+{`[
+  {
+    "id": "1",
+    "key": "DISC-XXXX-XXXX-XXXX",
+    "userId": "user123",
+    "status": "active",
+    "productName": "Discord Bot",
+    "expiresAt": "2025-12-31T23:59:59.000Z",
+    "guildId": "1234567890",
+    "activatedAt": "2024-01-15T10:30:00.000Z"
+  }
+]`}
+                </pre>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="default">POST</Badge>
+                <code className="text-sm font-mono">/api/licenses/admin</code>
+                <Badge variant="outline" className="text-xs">Admin</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Create a new license
+              </p>
+              <div className="bg-muted p-4 rounded-md space-y-2">
+                <p className="text-xs font-semibold">Request Body:</p>
+                <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "userId": "user123",
+  "productName": "Discord Bot Premium",
+  "duration": 12,
+  "licenseType": "yearly",
+  "status": "active"
+}`}
+                </pre>
+                <p className="text-xs font-semibold mt-3">Response:</p>
+                <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "id": "2",
+  "key": "DISC-ABCD-EFGH-IJKL",
+  "userId": "user123",
+  "status": "active",
+  "productName": "Discord Bot Premium",
+  "expiresAt": "2026-01-15T23:59:59.000Z"
+}`}
+                </pre>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="default">PATCH</Badge>
+                <code className="text-sm font-mono">/api/licenses/:id</code>
+                <Badge variant="outline" className="text-xs">Admin</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Update a license
+              </p>
+              <div className="bg-muted p-4 rounded-md space-y-2">
+                <p className="text-xs font-semibold">Request Body:</p>
+                <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "status": "suspended",
+  "note": "Payment failed"
+}`}
+                </pre>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="default">DELETE</Badge>
+                <code className="text-sm font-mono">/api/licenses/:id</code>
+                <Badge variant="outline" className="text-xs">Admin</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Delete a license
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="default">POST</Badge>
+                <code className="text-sm font-mono">/api/licenses/:id/reset</code>
+                <Badge variant="outline" className="text-xs">Admin</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Reset license binding (unbind from guild and clear activation data)
+              </p>
+              <div className="bg-muted p-4 rounded-md space-y-2">
+                <p className="text-xs font-semibold">Response:</p>
+                <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "success": true,
+  "license": {
+    "id": "1",
+    "key": "DISC-XXXX-XXXX-XXXX",
+    "userId": "user123",
+    "status": "active",
+    "productName": "Discord Bot",
+    "expiresAt": "2025-12-31T23:59:59.000Z",
+    "guildId": null,
+    "activatedAt": null,
+    "lastHeartbeat": null
+  }
+}`}
+                </pre>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="default">POST</Badge>
+                <code className="text-sm font-mono">/api/licenses/:id/regenerate</code>
+                <Badge variant="outline" className="text-xs">User</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Regenerate license key (users can only regenerate their own licenses)
+              </p>
+              <div className="bg-muted p-4 rounded-md space-y-2">
+                <p className="text-xs font-semibold">Response:</p>
+                <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "id": "1",
+  "key": "CRIM-XXXX-XXXX-XXXX-XXXX",
+  "userId": "user123",
+  "status": "active",
+  "productName": "Discord Bot",
+  "expiresAt": "2025-12-31T23:59:59.000Z"
+}`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>User Management Endpoints</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">GET</Badge>
+              <code className="text-sm font-mono">/api/users</code>
+              <Badge variant="outline" className="text-xs">Admin</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">Get all users with license counts</p>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">POST</Badge>
+              <code className="text-sm font-mono">/api/users</code>
+              <Badge variant="outline" className="text-xs">Admin</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">Create a new user</p>
+            <div className="bg-muted p-4 rounded-md space-y-2">
+              <p className="text-xs font-semibold">Request Body:</p>
+              <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "username": "newuser",
+  "email": "user@example.com",
+  "password": "secure_password",
+  "role": "customer",
+  "isAdmin": false
+}`}
+              </pre>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">PATCH</Badge>
+              <code className="text-sm font-mono">/api/users/:id</code>
+              <Badge variant="outline" className="text-xs">Admin</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">Update user details</p>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">DELETE</Badge>
+              <code className="text-sm font-mono">/api/users/:id</code>
+              <Badge variant="outline" className="text-xs">Admin</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">Delete a user</p>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">PATCH</Badge>
+              <code className="text-sm font-mono">/api/profile</code>
+              <Badge variant="outline" className="text-xs">User</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">Update own profile</p>
+            <div className="bg-muted p-4 rounded-md space-y-2">
+              <p className="text-xs font-semibold">Request Body:</p>
+              <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "username": "newusername",
+  "currentPassword": "old_password",
+  "profilePicture": "https://example.com/avatar.png"
+}`}
+              </pre>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Bot API Keys Endpoints</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">GET</Badge>
+              <code className="text-sm font-mono">/api/bot-api-keys</code>
+              <Badge variant="outline" className="text-xs">Admin</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">List all bot API keys</p>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">POST</Badge>
+              <code className="text-sm font-mono">/api/bot-api-keys</code>
+              <Badge variant="outline" className="text-xs">Admin</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">Create a new bot API key</p>
+            <div className="bg-muted p-4 rounded-md space-y-2">
+              <p className="text-xs font-semibold">Request Body:</p>
+              <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "name": "Production Bot Key"
+}`}
+              </pre>
+              <p className="text-xs font-semibold mt-3">Response (key shown only once):</p>
+              <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "id": "1",
+  "name": "Production Bot Key",
+  "key": "lm_abc123...",
+  "keyPrefix": "lm_abc123...",
+  "isActive": true
+}`}
+              </pre>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">PATCH</Badge>
+              <code className="text-sm font-mono">/api/bot-api-keys/:id</code>
+              <Badge variant="outline" className="text-xs">Admin</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">Update API key (e.g., deactivate)</p>
+            <div className="bg-muted p-4 rounded-md space-y-2">
+              <p className="text-xs font-semibold">Request Body:</p>
+              <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "isActive": false,
+  "name": "Deactivated Key"
+}`}
+              </pre>
+              <p className="text-xs font-semibold mt-3">Response:</p>
+              <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "id": "1",
+  "name": "Deactivated Key",
+  "keyPrefix": "lm_abc123...",
+  "isActive": false,
+  "lastUsedAt": "2024-01-15T10:30:00.000Z"
+}`}
+              </pre>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">DELETE</Badge>
+              <code className="text-sm font-mono">/api/bot-api-keys/:id</code>
+              <Badge variant="outline" className="text-xs">Admin</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">Delete an API key</p>
+            <div className="bg-muted p-4 rounded-md space-y-2">
+              <p className="text-xs font-semibold">Response:</p>
+              <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "success": true
+}`}
+              </pre>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Discord OAuth Configuration</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">GET</Badge>
+              <code className="text-sm font-mono">/api/discord-config</code>
+              <Badge variant="outline" className="text-xs">Admin</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">Get Discord OAuth configuration</p>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="default">POST</Badge>
+              <code className="text-sm font-mono">/api/discord-config</code>
+              <Badge variant="outline" className="text-xs">Admin</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">Save Discord OAuth configuration</p>
+            <div className="bg-muted p-4 rounded-md space-y-2">
+              <p className="text-xs font-semibold">Request Body:</p>
+              <pre className="text-xs font-mono overflow-x-auto">
+{`{
+  "clientId": "your_discord_client_id",
+  "clientSecret": "your_discord_client_secret",
+  "redirectUri": "https://yourdomain.com/api/auth/discord/callback"
+}`}
+              </pre>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Common Response Codes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="font-mono">200</Badge>
+              <span>OK - Request successful</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="font-mono">400</Badge>
+              <span>Bad Request - Invalid request data</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="font-mono">401</Badge>
+              <span>Unauthorized - Authentication required</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="font-mono">403</Badge>
+              <span>Forbidden - Admin access required</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="font-mono">404</Badge>
+              <span>Not Found - Resource not found</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="font-mono">500</Badge>
+              <span>Server Error - Internal error occurred</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 }
