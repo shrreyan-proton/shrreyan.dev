@@ -155,7 +155,7 @@ function BotApiDocs() {
               <div>
                 <h3 className="font-semibold">Send Heartbeats</h3>
                 <p className="text-sm text-muted-foreground">
-                  Periodically verify the license (every 1-6 hours) to ensure it remains valid.
+                  Periodically verify the license (every 60 seconds) to ensure it remains valid.
                 </p>
               </div>
             </div>
@@ -390,7 +390,7 @@ async def on_ready():
         print("❌ Bot not in any guilds!")
         await bot.close()
 
-@tasks.loop(hours=3)  # Check every 3 hours
+@tasks.loop(seconds=60)  # Check every 60 seconds
 async def heartbeat_task():
     """Periodic license verification"""
     result = await license_manager.verify_license()
@@ -545,7 +545,7 @@ client.once('ready', async () => {
     const activated = await licenseManager.activateLicense(guildId);
 
     if (activated) {
-      // Start heartbeat checks every 3 hours
+      // Start heartbeat checks every 60 seconds
       setInterval(async () => {
         const result = await licenseManager.verifyLicense();
         if (result === 'shutdown') {
@@ -555,7 +555,7 @@ client.once('ready', async () => {
           console.error('❌ License invalid! Shutting down bot.');
           process.exit(1);
         }
-      }, 3 * 60 * 60 * 1000); // 3 hours
+      }, 60 * 1000); // 60 seconds
     } else {
       console.error('❌ Failed to activate license. Bot shutting down.');
       process.exit(1);
@@ -608,7 +608,7 @@ client.login(process.env.DISCORD_TOKEN);`}
             <div>
               <h4 className="font-semibold text-sm">Implement heartbeat checks</h4>
               <p className="text-sm text-muted-foreground">
-                Verify license validity every 1-6 hours to catch revocations or expirations
+                Verify license validity every 60 seconds to catch revocations or expirations
               </p>
             </div>
           </div>

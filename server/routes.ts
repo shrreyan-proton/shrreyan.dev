@@ -749,8 +749,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? Math.floor((now.getTime() - lastHeartbeat.getTime()) / 60000)
             : null;
           
-          // Bot is online if heartbeat within last 10 minutes
-          const isOnline = minutesSinceHeartbeat !== null && minutesSinceHeartbeat < 10;
+          // Bot is online if heartbeat within last 2 minutes
+          const isOnline = minutesSinceHeartbeat !== null && minutesSinceHeartbeat < 2;
           
           return {
             id: license.id,
