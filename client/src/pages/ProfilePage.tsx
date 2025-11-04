@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Mail, UserCircle, Shield, Image, X } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { User, Mail, UserCircle, Shield, Image, X, Upload, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -20,8 +21,11 @@ export default function ProfilePage() {
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
-    profilePicture: "",
   });
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: { username?: string; password?: string; currentPassword?: string; oldPassword?: string; profilePicture?: string }) => {
@@ -39,8 +43,10 @@ export default function ProfilePage() {
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
-        profilePicture: "",
       });
+      setUploadDialogOpen(false);
+      setSelectedFile(null);
+      setPreviewUrl(null);
     },
     onError: (error: any) => {
       toast({
@@ -125,21 +131,57 @@ export default function ProfilePage() {
     });
   };
 
-  const handleUpdateProfilePicture = () => {
-    if (!formData.profilePicture.trim()) {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload a PNG, JPG, or WEBP image",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({
+        title: "File Too Large",
+        description: "Please upload an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadProfilePicture = () => {
+    if (!previewUrl) {
       toast({
         title: "Validation Error",
-        description: "Please enter a valid image URL",
+        description: "Please select an image to upload",
         variant: "destructive",
       });
       return;
     }
     
-    updateProfileMutation.mutate({ profilePicture: formData.profilePicture });
+    updateProfileMutation.mutate({ profilePicture: previewUrl });
   };
 
   const handleRemoveProfilePicture = () => {
     updateProfileMutation.mutate({ profilePicture: "" });
+  };
+
+  const handleAvatarClick = () => {
+    setUploadDialogOpen(true);
   };
 
   const getUserInitials = (username?: string) => {
@@ -164,14 +206,23 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
-                {user?.profilePicture && (
-                  <AvatarImage src={user.profilePicture} alt={user.username || "Profile"} />
-                )}
-                <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                  {user ? getUserInitials(user.username || user.email) : "U"}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative group">
+                <Avatar 
+                  className="h-20 w-20 cursor-pointer hover-elevate active-elevate-2" 
+                  onClick={handleAvatarClick}
+                  data-testid="avatar-upload-trigger"
+                >
+                  {user?.profilePicture && (
+                    <AvatarImage src={user.profilePicture} alt={user.username || "Profile"} />
+                  )}
+                  <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                    {user ? getUserInitials(user.username || user.email) : "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <Camera className="h-8 w-8 text-white" />
+                </div>
+              </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
@@ -207,61 +258,6 @@ export default function ProfilePage() {
                 </div>
               </>
             )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Picture</CardTitle>
-            <CardDescription>
-              Set your profile picture using an image URL
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-24 w-24">
-                {user?.profilePicture && (
-                  <AvatarImage src={user.profilePicture} alt={user.username || "Profile"} />
-                )}
-                <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
-                  {user ? getUserInitials(user.username || user.email) : "U"}
-                </AvatarFallback>
-              </Avatar>
-              {user?.profilePicture && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRemoveProfilePicture}
-                  disabled={updateProfileMutation.isPending}
-                  data-testid="button-remove-picture"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Remove Picture
-                </Button>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="profile-picture">Image URL</Label>
-              <Input
-                id="profile-picture"
-                type="url"
-                placeholder="https://example.com/image.jpg"
-                data-testid="input-profile-picture"
-                value={formData.profilePicture}
-                onChange={(e) => setFormData({ ...formData, profilePicture: e.target.value })}
-              />
-              <p className="text-xs text-muted-foreground">
-                Enter a URL to an image you want to use as your profile picture
-              </p>
-            </div>
-            <Button
-              data-testid="button-update-picture"
-              onClick={handleUpdateProfilePicture}
-              disabled={updateProfileMutation.isPending}
-            >
-              <Image className="h-4 w-4 mr-2" />
-              {updateProfileMutation.isPending ? "Updating..." : "Update Profile Picture"}
-            </Button>
           </CardContent>
         </Card>
 
@@ -356,6 +352,85 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent data-testid="dialog-upload-picture">
+          <DialogHeader>
+            <DialogTitle>Upload Profile Picture</DialogTitle>
+            <DialogDescription>
+              Choose an image to use as your profile picture. Recommended size: 400x400 pixels.
+              Supported formats: PNG, JPG, WEBP (max 5MB)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex flex-col items-center gap-4">
+              {previewUrl ? (
+                <div className="relative">
+                  <Avatar className="h-32 w-32">
+                    <AvatarImage src={previewUrl} alt="Preview" />
+                  </Avatar>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute -top-2 -right-2 h-8 w-8 rounded-full"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setPreviewUrl(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                      }
+                    }}
+                    data-testid="button-clear-preview"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-32 w-32 rounded-full bg-muted">
+                  <Upload className="h-12 w-12 text-muted-foreground" />
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                onChange={handleFileSelect}
+                className="hidden"
+                data-testid="input-file-upload"
+              />
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                data-testid="button-choose-file"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Choose Image
+              </Button>
+            </div>
+            <div className="flex gap-2 justify-end">
+              {user?.profilePicture && (
+                <Button
+                  variant="outline"
+                  onClick={handleRemoveProfilePicture}
+                  disabled={updateProfileMutation.isPending}
+                  data-testid="button-remove-picture"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Remove Current
+                </Button>
+              )}
+              <Button
+                onClick={handleUploadProfilePicture}
+                disabled={!previewUrl || updateProfileMutation.isPending}
+                data-testid="button-upload-picture"
+              >
+                <Image className="h-4 w-4 mr-2" />
+                {updateProfileMutation.isPending ? "Uploading..." : "Upload"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
