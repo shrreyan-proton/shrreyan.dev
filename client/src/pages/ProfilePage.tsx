@@ -16,13 +16,14 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
+    usernamePassword: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: { username?: string; password?: string }) => {
+    mutationFn: async (data: { username?: string; password?: string; currentPassword?: string; oldPassword?: string }) => {
       return apiRequest("PATCH", "/api/profile", data);
     },
     onSuccess: () => {
@@ -33,6 +34,7 @@ export default function ProfilePage() {
       });
       setFormData({
         username: "",
+        usernamePassword: "",
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
@@ -56,10 +58,41 @@ export default function ProfilePage() {
       });
       return;
     }
-    updateProfileMutation.mutate({ username: formData.username });
+    
+    if (formData.username === user?.username) {
+      toast({
+        title: "No Changes",
+        description: `Your username is already "${user.username}"`,
+        variant: "default",
+      });
+      return;
+    }
+    
+    if (!formData.usernamePassword) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter your password to confirm",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    updateProfileMutation.mutate({ 
+      username: formData.username, 
+      currentPassword: formData.usernamePassword 
+    });
   };
 
   const handleUpdatePassword = () => {
+    if (!formData.currentPassword) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter your current password",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!formData.newPassword || !formData.confirmPassword) {
       toast({
         title: "Validation Error",
@@ -84,7 +117,10 @@ export default function ProfilePage() {
       });
       return;
     }
-    updateProfileMutation.mutate({ password: formData.newPassword });
+    updateProfileMutation.mutate({ 
+      password: formData.newPassword,
+      oldPassword: formData.currentPassword
+    });
   };
 
   const getUserInitials = (username?: string) => {
@@ -170,6 +206,17 @@ export default function ProfilePage() {
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="username-password">Password Confirmation</Label>
+              <Input
+                id="username-password"
+                type="password"
+                placeholder="Enter your password to confirm"
+                data-testid="input-username-password"
+                value={formData.usernamePassword}
+                onChange={(e) => setFormData({ ...formData, usernamePassword: e.target.value })}
+              />
+            </div>
             <Button
               data-testid="button-update-username"
               onClick={handleUpdateUsername}
@@ -189,6 +236,17 @@ export default function ProfilePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Current Password</Label>
+              <Input
+                id="current-password"
+                type="password"
+                placeholder="Enter your current password"
+                data-testid="input-current-password"
+                value={formData.currentPassword}
+                onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="new-password">New Password</Label>
               <Input

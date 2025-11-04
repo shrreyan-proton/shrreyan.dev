@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated, isAdmin, initializeDiscordStrategy } from "
 import passport from "passport";
 import { insertUserSchema, insertLicenseSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
+import bcrypt from "bcryptjs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -119,12 +120,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/profile", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      const { email, isAdmin, discordId, discordUsername, ...allowedUpdates } = req.body;
+      const { email, isAdmin, discordId, discordUsername, currentPassword, oldPassword, ...allowedUpdates } = req.body;
       
-      // Users can only update their own username and password
+      // Get current user to verify password
+      const currentUser = await storage.getUser(userId);
+      if (!currentUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
       const updates: any = {};
-      if (allowedUpdates.username) updates.username = allowedUpdates.username;
-      if (allowedUpdates.password) updates.password = allowedUpdates.password;
+      
+      // If updating username, verify password
+      if (allowedUpdates.username) {
+        if (!currentPassword) {
+          return res.status(400).json({ error: "Password confirmation required to update username" });
+        }
+        const isValidPassword = await bcrypt.compare(currentPassword, currentUser.password);
+        if (!isValidPassword) {
+          return res.status(401).json({ error: "Invalid password" });
+        }
+        updates.username = allowedUpdates.username;
+      }
+      
+      // If updating password, verify old password
+      if (allowedUpdates.password) {
+        if (!oldPassword) {
+          return res.status(400).json({ error: "Current password required to change password" });
+        }
+        const isValidPassword = await bcrypt.compare(oldPassword, currentUser.password);
+        if (!isValidPassword) {
+          return res.status(401).json({ error: "Current password is incorrect" });
+        }
+        updates.password = allowedUpdates.password;
+      }
       
       const user = await storage.updateUser(userId, updates);
       if (!user) {
