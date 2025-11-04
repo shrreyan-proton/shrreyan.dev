@@ -33,7 +33,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
     duration: "12",
     productName: "Discord Bot",
     maxActivations: "1",
-    discordServerId: "",
+    discordUserId: "",
     note: "",
   });
 
@@ -43,7 +43,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
       ...formData,
       duration: parseInt(formData.duration),
       maxActivations: parseInt(formData.maxActivations),
-      discordServerId: formData.discordServerId || undefined,
+      discordUserId: formData.discordUserId || undefined,
       note: formData.note || undefined,
     };
     console.log("Creating license:", submitData);
@@ -54,7 +54,7 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
       duration: "12",
       productName: "Discord Bot",
       maxActivations: "1",
-      discordServerId: "",
+      discordUserId: "",
       note: "",
     });
   };
@@ -132,15 +132,15 @@ export function CreateLicenseDialog({ onSubmit }: CreateLicenseDialogProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="discordServerId">Discord Server ID (Optional)</Label>
+                  <Label htmlFor="discordUserId">Discord User ID (Optional)</Label>
                   <Input
-                    id="discordServerId"
-                    value={formData.discordServerId}
+                    id="discordUserId"
+                    value={formData.discordUserId}
                     onChange={(e) =>
-                      setFormData({ ...formData, discordServerId: e.target.value })
+                      setFormData({ ...formData, discordUserId: e.target.value })
                     }
-                    placeholder="Restrict to specific Discord server"
-                    data-testid="input-discord-server-id"
+                    placeholder="Restrict to specific Discord user"
+                    data-testid="input-discord-user-id"
                   />
                 </div>
               </div>

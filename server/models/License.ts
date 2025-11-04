@@ -11,7 +11,7 @@ export interface ILicense extends Document {
   maxActivations?: number;
   hwid?: string;
   ipWhitelist?: string[];
-  discordServerId?: string;
+  discordUserId?: string;
   note?: string;
 }
 
@@ -56,7 +56,7 @@ const LicenseSchema = new Schema<ILicense>({
   ipWhitelist: {
     type: [String],
   },
-  discordServerId: {
+  discordUserId: {
     type: String,
   },
   note: {

@@ -31,7 +31,7 @@ export const insertLicenseSchema = z.object({
   maxActivations: z.number().default(1),
   hwid: z.string().optional(),
   ipWhitelist: z.array(z.string()).optional(),
-  discordServerId: z.string().optional(),
+  discordUserId: z.string().optional(),
   note: z.string().optional(),
 });
 
