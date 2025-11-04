@@ -1,15 +1,43 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
-import * as schema from "@shared/schema";
+import mongoose from "mongoose";
 
-neonConfig.webSocketConstructor = ws;
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://licence_manager:j0nX79ynJE47KGP9@botdb.jyixcvf.mongodb.net/?appName=BotDB";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+let isConnected = false;
+
+export async function connectDB() {
+  if (isConnected) {
+    return;
+  }
+
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      dbName: "license_manager",
+    });
+    isConnected = true;
+    console.log("✅ Connected to MongoDB");
+  } catch (error) {
+    console.error("❌ MongoDB connection error:", error);
+    throw error;
+  }
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+export async function disconnectDB() {
+  if (!isConnected) {
+    return;
+  }
+
+  try {
+    await mongoose.disconnect();
+    isConnected = false;
+    console.log("🔌 Disconnected from MongoDB");
+  } catch (error) {
+    console.error("❌ MongoDB disconnection error:", error);
+    throw error;
+  }
+}
+
+// Graceful shutdown
+process.on("SIGINT", async () => {
+  await disconnectDB();
+  process.exit(0);
+});
