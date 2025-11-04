@@ -6,6 +6,13 @@ export interface ILicense extends Document {
   status: "active" | "expired" | "suspended";
   createdAt: Date;
   expiresAt: Date;
+  productName: string;
+  licenseType: "lifetime" | "monthly" | "yearly" | "custom";
+  maxActivations?: number;
+  hwid?: string;
+  ipWhitelist?: string[];
+  discordServerId?: string;
+  note?: string;
 }
 
 const LicenseSchema = new Schema<ILicense>({
@@ -30,6 +37,30 @@ const LicenseSchema = new Schema<ILicense>({
   expiresAt: {
     type: Date,
     required: true,
+  },
+  productName: {
+    type: String,
+    default: "Discord Bot",
+  },
+  licenseType: {
+    type: String,
+    enum: ["lifetime", "monthly", "yearly", "custom"],
+    default: "custom",
+  },
+  maxActivations: {
+    type: Number,
+  },
+  hwid: {
+    type: String,
+  },
+  ipWhitelist: {
+    type: [String],
+  },
+  discordServerId: {
+    type: String,
+  },
+  note: {
+    type: String,
   },
 });
 
