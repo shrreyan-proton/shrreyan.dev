@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Footer } from "@/components/Footer";
 import { Redirect } from "@/components/Redirect";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
@@ -16,6 +17,7 @@ import UsersPage from "@/pages/UsersPage";
 import SettingsPage from "@/pages/SettingsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import MyLicensesPage from "@/pages/MyLicensesPage";
+import ProductsPage from "@/pages/ProductsPage";
 
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -31,6 +33,7 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
             <div className="container max-w-7xl mx-auto p-6 lg:p-8">
               {children}
             </div>
+            <Footer />
           </main>
         </div>
       </div>
@@ -88,6 +91,7 @@ function Router() {
           <AdminRoute component={SettingsPage} />
         </Route>
         <Route path="/profile" component={ProfilePage} />
+        <Route path="/products" component={ProductsPage} />
         <Route component={NotFound} />
       </Switch>
     </AuthenticatedLayout>

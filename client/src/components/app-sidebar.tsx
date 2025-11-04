@@ -1,4 +1,4 @@
-import { Home, Key, Users, Settings, LogOut, User, UserCircle } from "lucide-react";
+import { Home, Key, Users, Settings, LogOut, User, UserCircle, Package } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -57,6 +57,12 @@ const userMenuItems = [
     url: "/",
     icon: Key,
     testId: "link-my-licenses",
+  },
+  {
+    title: "Products",
+    url: "/products",
+    icon: Package,
+    testId: "link-products",
   },
 ];
 
