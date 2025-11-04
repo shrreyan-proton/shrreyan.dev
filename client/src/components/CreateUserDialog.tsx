@@ -118,7 +118,9 @@ export function CreateUserDialog({ onSubmit }: CreateUserDialogProps) {
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
                   <SelectItem value="customer">Customer</SelectItem>
+                  <SelectItem value="staff">Staff</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
