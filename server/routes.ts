@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isAdmin } from "./auth";
+import { setupAuth, isAuthenticated, isAdmin, initializeDiscordStrategy } from "./auth";
 import passport from "passport";
 import { insertUserSchema, insertLicenseSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
@@ -9,6 +9,9 @@ import { randomBytes } from "crypto";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
+  
+  // Initialize Discord OAuth if configured
+  await initializeDiscordStrategy();
 
   // Auth routes
   app.post("/api/auth/login", (req, res, next) => {
@@ -39,6 +42,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { password, ...userWithoutPassword } = req.user as any;
     res.json({ user: userWithoutPassword });
   });
+
+  // Discord OAuth routes
+  app.get("/api/auth/discord", async (req, res, next) => {
+    const config = await storage.getDiscordConfig();
+    if (!config || !config.clientId) {
+      return res.status(400).json({ error: "Discord OAuth not configured" });
+    }
+    passport.authenticate("discord")(req, res, next);
+  });
+
+  app.get("/api/auth/discord/callback", 
+    passport.authenticate("discord", { 
+      failureRedirect: "/",
+      successRedirect: "/" 
+    })
+  );
 
   // User routes
   app.get("/api/users", isAuthenticated, isAdmin, async (req, res) => {
@@ -176,6 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "All fields are required" });
       }
       const config = await storage.saveDiscordConfig({ clientId, clientSecret, redirectUri });
+      await initializeDiscordStrategy();
       res.json(config);
     } catch (error: any) {
       res.status(400).json({ error: error.message || "Failed to save Discord configuration" });
