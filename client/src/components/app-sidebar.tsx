@@ -1,4 +1,4 @@
-import { Home, Key, Users, Settings } from "lucide-react";
+import { Home, Key, Users, Settings, LogOut, User } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -12,6 +12,16 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
 import logoImage from "@assets/logo_1762262685070.png";
 
 const menuItems = [
@@ -42,7 +52,20 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  const getUserInitials = (email: string) => {
+    return email.substring(0, 2).toUpperCase();
+  };
 
   return (
     <Sidebar>
@@ -75,9 +98,47 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-6">
-        <div className="text-xs text-muted-foreground">
-          Admin: shrreyango@gmail.com
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="flex w-full items-center gap-3 rounded-md hover-elevate active-elevate-2 p-3"
+              data-testid="button-profile-menu"
+            >
+              <Avatar className="h-9 w-9">
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {user ? getUserInitials(user.email) : "AD"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col items-start text-sm overflow-hidden">
+                <span className="font-medium truncate w-full">
+                  {user?.email || "Admin"}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {user?.isAdmin ? "Administrator" : "User"}
+                </span>
+              </div>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56" data-testid="menu-profile-dropdown">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setLocation("/settings")}
+              data-testid="menu-item-settings"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleLogout}
+              data-testid="menu-item-logout"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Logout</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );
