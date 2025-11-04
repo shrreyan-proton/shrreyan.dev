@@ -76,7 +76,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-6">
         <div className="text-xs text-muted-foreground">
-          Admin: shrreyangO@gmail.com
+          Admin: shrreyango@gmail.com
         </div>
       </SidebarFooter>
     </Sidebar>

@@ -87,7 +87,7 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <Label>Email</Label>
               <Input
-                value="shrreyangO@gmail.com"
+                value="shrreyango@gmail.com"
                 disabled
                 data-testid="input-admin-email"
               />

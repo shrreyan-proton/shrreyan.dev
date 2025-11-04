@@ -3,9 +3,9 @@ import { UserTable } from "../UserTable";
 const mockUsers = [
   {
     id: "1",
-    email: "shrreyangO@gmail.com",
+    email: "shrreyango@gmail.com",
     discordId: "123456789",
-    discordUsername: "shrreyangO",
+    discordUsername: "shrreyango",
     isAdmin: true,
     licensesCount: 5,
     joinedAt: "2024-01-01",

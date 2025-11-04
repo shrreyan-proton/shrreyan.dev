@@ -127,7 +127,7 @@ export default function LoginPage() {
           </Button>
 
           <div className="text-xs text-center text-muted-foreground">
-            Admin: shrreyangO@gmail.com
+            Admin: shrreyango@gmail.com
           </div>
         </CardContent>
       </Card>
