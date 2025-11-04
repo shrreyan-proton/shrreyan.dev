@@ -20,9 +20,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export type User = {
   id: string;
   email: string;
+  username?: string;
   discordId?: string;
   discordUsername?: string;
   isAdmin: boolean;
+  profilePicture?: string;
   licensesCount: number;
   joinedAt: string;
 };
@@ -60,11 +62,15 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
               <TableCell>
                 <div className="flex items-center gap-3">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`} />
+                    {user.profilePicture && (
+                      <AvatarImage src={user.profilePicture} alt={user.username || user.email} />
+                    )}
                     <AvatarFallback>{getInitials(user.email, user.discordUsername)}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-medium" data-testid={`text-email-${user.id}`}>{user.email}</div>
+                    <div className="font-medium" data-testid={`text-email-${user.id}`}>
+                      {user.username || user.email}
+                    </div>
                   </div>
                 </div>
               </TableCell>
