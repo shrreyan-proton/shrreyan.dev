@@ -86,6 +86,7 @@ export async function initializeDiscordStrategy() {
               password: Math.random().toString(36).substring(2, 15),
               discordId: profile.id,
               discordUsername: profile.username,
+              role: "customer",
               isAdmin: false,
             });
             return done(null, newUser);

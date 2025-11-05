@@ -7,9 +7,11 @@ import { Search } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function UsersPage() {
   const { toast } = useToast();
+  const { can } = usePermissions();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -96,7 +98,7 @@ export default function UsersPage() {
           <h1 className="text-3xl font-semibold" data-testid="text-page-title">Users</h1>
           <p className="text-muted-foreground mt-1">Manage all users and their permissions</p>
         </div>
-        <CreateUserDialog onSubmit={(data) => createUserMutation.mutate(data)} />
+        {can.createUser() && <CreateUserDialog onSubmit={(data) => createUserMutation.mutate(data)} />}
       </div>
 
       <div className="relative">
@@ -115,8 +117,8 @@ export default function UsersPage() {
       ) : (
         <UserTable
           users={filteredUsers}
-          onEdit={handleEdit}
-          onDelete={(user) => deleteUserMutation.mutate(user.id)}
+          onEdit={can.editUser() ? handleEdit : undefined}
+          onDelete={can.deleteUser() ? (user) => deleteUserMutation.mutate(user.id) : undefined}
         />
       )}
 

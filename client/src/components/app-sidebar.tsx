@@ -22,74 +22,82 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import logoImage from "@assets/logo_1762262685070.png";
-
-const adminMenuItems = [
-  {
-    title: "Dashboard",
-    url: "/",
-    icon: Home,
-    testId: "link-dashboard",
-  },
-  {
-    title: "Licenses",
-    url: "/licenses",
-    icon: Key,
-    testId: "link-licenses",
-  },
-  {
-    title: "Bot Monitor",
-    url: "/bots",
-    icon: Activity,
-    testId: "link-bots",
-  },
-  {
-    title: "Violations",
-    url: "/violations",
-    icon: AlertTriangle,
-    testId: "link-violations",
-  },
-  {
-    title: "Users",
-    url: "/users",
-    icon: Users,
-    testId: "link-users",
-  },
-  {
-    title: "Bot Integration",
-    url: "/docs",
-    icon: BookOpen,
-    testId: "link-docs",
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
-    testId: "link-settings",
-  },
-];
-
-const userMenuItems = [
-  {
-    title: "My Licenses",
-    url: "/",
-    icon: Key,
-    testId: "link-my-licenses",
-  },
-  {
-    title: "Products",
-    url: "/products",
-    icon: Package,
-    testId: "link-products",
-  },
-];
 
 export function AppSidebar() {
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
+  const { can, role: effectiveRole } = usePermissions();
   
-  const effectiveRole: string = user?.role ?? (user?.isAdmin ? "admin" : "customer");
-  const menuItems = user?.isAdmin ? adminMenuItems : userMenuItems;
+  // Build menu items based on permissions
+  const allMenuItems = [
+    {
+      title: "Dashboard",
+      url: "/",
+      icon: Home,
+      testId: "link-dashboard",
+      show: can.viewLicenses() || can.viewUsers(),
+    },
+    {
+      title: "My Licenses",
+      url: "/",
+      icon: Key,
+      testId: "link-my-licenses",
+      show: !can.viewLicenses(),
+    },
+    {
+      title: "Products",
+      url: "/products",
+      icon: Package,
+      testId: "link-products",
+      show: !can.viewLicenses(),
+    },
+    {
+      title: "Licenses",
+      url: "/licenses",
+      icon: Key,
+      testId: "link-licenses",
+      show: can.viewLicenses(),
+    },
+    {
+      title: "Bot Monitor",
+      url: "/bots",
+      icon: Activity,
+      testId: "link-bots",
+      show: can.viewBots(),
+    },
+    {
+      title: "Violations",
+      url: "/violations",
+      icon: AlertTriangle,
+      testId: "link-violations",
+      show: can.viewViolations(),
+    },
+    {
+      title: "Users",
+      url: "/users",
+      icon: Users,
+      testId: "link-users",
+      show: can.viewUsers(),
+    },
+    {
+      title: "Bot Integration",
+      url: "/docs",
+      icon: BookOpen,
+      testId: "link-docs",
+      show: can.viewDocs(),
+    },
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Settings,
+      testId: "link-settings",
+      show: can.viewSettings(),
+    },
+  ];
+
+  const menuItems = allMenuItems.filter(item => item.show);
 
   const handleLogout = async () => {
     try {

@@ -7,9 +7,11 @@ import { Search } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function LicensesPage() {
   const { toast } = useToast();
+  const { can } = usePermissions();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingLicense, setEditingLicense] = useState<any | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -108,7 +110,7 @@ export default function LicensesPage() {
           <h1 className="text-3xl font-semibold" data-testid="text-page-title">Licenses</h1>
           <p className="text-muted-foreground mt-1">Manage all Discord bot licenses</p>
         </div>
-        <CreateLicenseDialog onSubmit={(data) => createLicenseMutation.mutate(data)} />
+        {can.createLicense() && <CreateLicenseDialog onSubmit={(data) => createLicenseMutation.mutate(data)} />}
       </div>
 
       <div className="relative">
@@ -127,12 +129,12 @@ export default function LicensesPage() {
       ) : (
         <LicenseTable
           licenses={filteredLicenses}
-          onEdit={(license) => {
+          onEdit={can.editLicense() ? (license) => {
             setEditingLicense(license);
             setEditDialogOpen(true);
-          }}
-          onDelete={(license) => deleteLicenseMutation.mutate(license.id)}
-          onReset={(license) => resetLicenseMutation.mutate(license.id)}
+          } : undefined}
+          onDelete={can.deleteLicense() ? (license) => deleteLicenseMutation.mutate(license.id) : undefined}
+          onReset={can.editLicense() ? (license) => resetLicenseMutation.mutate(license.id) : undefined}
         />
       )}
 
