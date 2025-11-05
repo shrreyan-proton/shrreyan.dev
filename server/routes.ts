@@ -284,7 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  app.get("/api/users", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/users", isAuthenticated, hasRole("founder", "admin", "staff"), async (req, res) => {
     try {
       const users = await storage.listUsers();
       const usersWithLicenseCounts = await Promise.all(
@@ -362,7 +362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  app.post("/api/users", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/users", isAuthenticated, hasRole("founder", "admin"), async (req, res) => {
     try {
       // Enforce that founder role always has admin privileges
       if (req.body.role === "founder") {
@@ -378,7 +378,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/users/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/users/:id", isAuthenticated, hasRole("founder", "admin"), async (req, res) => {
     try {
       const existingUser = await storage.getUser(req.params.id);
       if (!existingUser) {
@@ -414,7 +414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/users/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/users/:id", isAuthenticated, hasRole("founder", "admin"), async (req, res) => {
     try {
       const existingUser = await storage.getUser(req.params.id);
       if (!existingUser) {
@@ -527,7 +527,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  app.get("/api/licenses", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/licenses", isAuthenticated, hasRole("founder", "admin", "staff"), async (req, res) => {
     try {
       const licenses = await storage.listLicenses();
       const licensesWithUserInfo = await Promise.all(
@@ -647,7 +647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  app.post("/api/licenses/admin", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/licenses/admin", isAuthenticated, hasRole("founder", "admin", "staff"), async (req, res) => {
     try {
       // Generate a random license key if not provided
       const key = req.body.key || `DISC-${randomBytes(4).toString('hex').toUpperCase()}-${randomBytes(4).toString('hex').toUpperCase()}-${randomBytes(4).toString('hex').toUpperCase()}`;
@@ -689,7 +689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/licenses/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/licenses/:id", isAuthenticated, hasRole("founder", "admin", "staff"), async (req, res) => {
     try {
       const license = await storage.updateLicense(req.params.id, req.body);
       if (!license) {
@@ -701,7 +701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/licenses/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/licenses/:id", isAuthenticated, hasRole("founder", "admin"), async (req, res) => {
     try {
       const success = await storage.deleteLicense(req.params.id);
       if (!success) {
@@ -826,7 +826,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // License unbind/reset route
-  app.post("/api/licenses/:id/reset", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/licenses/:id/reset", isAuthenticated, hasRole("founder", "admin", "staff"), async (req, res) => {
     try {
       const license = await storage.getLicense(req.params.id);
       if (!license) {
@@ -847,7 +847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bot Management Admin Routes
-  app.get("/api/admin/bots", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/bots", isAuthenticated, hasRole("founder", "admin", "staff"), async (req, res) => {
     try {
       const licenses = await storage.listLicenses();
       
@@ -889,7 +889,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/bots/:id/shutdown", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/bots/:id/shutdown", isAuthenticated, hasRole("founder", "admin", "staff"), async (req, res) => {
     try {
       const { id } = req.params;
       const { reason } = req.body;
@@ -928,7 +928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/bots/:id/clear-shutdown", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/bots/:id/clear-shutdown", isAuthenticated, hasRole("founder", "admin", "staff"), async (req, res) => {
     try {
       const { id } = req.params;
 
@@ -965,7 +965,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/bots/:id/events", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/bots/:id/events", isAuthenticated, hasRole("founder", "admin", "staff"), async (req, res) => {
     try {
       const { id } = req.params;
       const limit = parseInt(req.query.limit as string) || 50;
