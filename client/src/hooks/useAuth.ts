@@ -6,7 +6,7 @@ interface AuthUser {
   id: string;
   username: string;
   email: string;
-  role: "user" | "customer" | "staff" | "admin";
+  role: "user" | "customer" | "staff" | "admin" | "founder";
   isAdmin: boolean;
   discordUsername?: string;
   profilePicture?: string;

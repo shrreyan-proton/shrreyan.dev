@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
-import { User, Mail, UserCircle, Shield, Image, X, Upload, Camera, ZoomIn, ZoomOut, UserCog, ShoppingBag } from "lucide-react";
+import { User, Mail, UserCircle, Shield, Image, X, Upload, Camera, ZoomIn, ZoomOut, UserCog, ShoppingBag, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -303,11 +303,13 @@ export default function ProfilePage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
+                  {effectiveRole === "founder" && <Crown className="h-4 w-4 text-amber-500 fill-amber-500" />}
                   {effectiveRole === "admin" && <Shield className="h-4 w-4 text-muted-foreground" />}
                   {effectiveRole === "staff" && <UserCog className="h-4 w-4 text-muted-foreground" />}
                   {effectiveRole === "customer" && <ShoppingBag className="h-4 w-4 text-muted-foreground" />}
                   {effectiveRole === "user" && <UserCircle className="h-4 w-4 text-muted-foreground" />}
                   <span className="text-sm text-muted-foreground" data-testid="text-current-role">
+                    {effectiveRole === "founder" && "Founder"}
                     {effectiveRole === "admin" && "Administrator"}
                     {effectiveRole === "staff" && "Staff"}
                     {effectiveRole === "customer" && "Customer"}
