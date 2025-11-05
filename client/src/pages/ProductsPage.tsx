@@ -1,15 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, ExternalLink, Package } from "lucide-react";
+import { ShoppingCart, ExternalLink, Package } from "lucide-react";
 
 interface Product {
   id: string;
   name: string;
   description: string;
   version: string;
-  downloadUrl: string;
-  redirectUrl?: string;
   category: string;
   status: "available" | "maintenance";
 }
@@ -17,29 +15,18 @@ interface Product {
 const products: Product[] = [
   {
     id: "1",
-    name: "Crim Tickets Bot",
+    name: "Crim Ticket Bot",
     description: "Advanced Discord ticket management system with custom categories, transcripts, and auto-responses.",
     version: "v2.1.0",
-    downloadUrl: "https://github.com/your-repo/crim-tickets/releases/latest",
-    redirectUrl: "https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=8&scope=bot",
-    category: "Discord Bot",
-    status: "available",
-  },
-  {
-    id: "2",
-    name: "Crim Tickets Premium",
-    description: "Premium version with advanced analytics, priority support, and custom branding options.",
-    version: "v2.1.0 Pro",
-    downloadUrl: "https://github.com/your-repo/crim-tickets-pro/releases/latest",
-    redirectUrl: "https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID_PRO&permissions=8&scope=bot",
     category: "Discord Bot",
     status: "available",
   },
 ];
 
 export default function ProductsPage() {
-  const handleDownload = (url: string) => {
-    window.open(url, "_blank", "noopener,noreferrer");
+  const handleBuyNow = () => {
+    // Handle purchase/redirect logic here
+    console.log("Buy Now clicked");
   };
 
   const getStatusBadge = (status: string) => {
@@ -88,29 +75,16 @@ export default function ProductsPage() {
                 </Badge>
               </div>
 
-              <div className="flex flex-col gap-2 pt-2">
+              <div className="pt-2">
                 <Button
-                  onClick={() => handleDownload(product.downloadUrl)}
+                  onClick={handleBuyNow}
                   disabled={product.status === "maintenance"}
-                  data-testid={`button-download-${product.id}`}
+                  data-testid={`button-buy-${product.id}`}
                   className="w-full"
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Latest
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Buy Now
                 </Button>
-                
-                {product.redirectUrl && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleDownload(product.redirectUrl!)}
-                    disabled={product.status === "maintenance"}
-                    data-testid={`button-invite-${product.id}`}
-                    className="w-full"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Invite to Discord
-                  </Button>
-                )}
               </div>
             </CardContent>
           </Card>
