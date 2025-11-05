@@ -248,8 +248,13 @@ export async function sendLicenseViolationEmail(params: LicenseViolationEmailPar
           <div class="email-wrapper">
             <div class="container">
               <div class="brand-header">
-                <div class="brand-logo">🔐 License Manager</div>
-                <p class="brand-tagline">Secure License Management System</p>
+                <div style="margin-bottom: 20px;">
+                  <div style="background: white; width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                    <span style="font-size: 42px;">🔐</span>
+                  </div>
+                </div>
+                <div class="brand-logo">License Manager</div>
+                <p class="brand-tagline">by Shrreyan</p>
                 <div class="alert-badge">⚠️ SECURITY ALERT</div>
               </div>
             <div class="content">
@@ -316,7 +321,7 @@ export async function sendLicenseViolationEmail(params: LicenseViolationEmailPar
             </div>
             <div class="footer">
               <p class="footer-text">This is an automated security notification. If you did not attempt this activation, please contact support immediately.</p>
-              <p class="footer-brand">🔐 License Manager</p>
+              <p class="footer-brand">🔐 License Manager by Shrreyan</p>
               <p class="footer-text">&copy; ${new Date().getFullYear()} License Management System. All rights reserved.</p>
             </div>
           </div>
@@ -358,7 +363,7 @@ This is an automated security notification. If you did not attempt this activati
     `;
 
     const response = await client.emails.send({
-      from: fromEmail,
+      from: `Licence Manager | Shrreyan <${fromEmail}>`,
       to: params.userEmail,
       subject: `⚠️ License Violation Detected - ${params.licenseKey}`,
       html,
