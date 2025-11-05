@@ -10,11 +10,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Check, Download, RefreshCw, Package } from "lucide-react";
+import { Copy, Check, Download, RefreshCw, Package, ShoppingCart } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { Link } from "wouter";
 
 export default function MyLicensesPage() {
   const { toast } = useToast();
@@ -126,8 +127,20 @@ export default function MyLicensesPage() {
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading...</div>
           ) : licenses.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              You haven't purchased any products yet buy now..
+            <div className="flex flex-col items-center justify-center py-12 px-4">
+              <div className="rounded-full bg-muted p-6 mb-4">
+                <Package className="h-12 w-12 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No Products Yet</h3>
+              <p className="text-muted-foreground mb-6 text-center max-w-md">
+                You haven't purchased any products yet. Browse our available products to get started.
+              </p>
+              <Link href="/products">
+                <Button data-testid="button-browse-products">
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Browse Products
+                </Button>
+              </Link>
             </div>
           ) : (
             <>
