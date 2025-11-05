@@ -7,6 +7,7 @@ import { insertUserSchema, insertLicenseSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 import { LicenseViolation } from "./models/LicenseViolation";
+import { sendLicenseViolationEmail } from "./email";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -926,6 +927,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to fetch violation stats:", error);
       res.status(500).json({ error: "Failed to fetch violation stats" });
+    }
+  });
+
+  // Test email endpoint (founder only)
+  app.post("/api/test-email", isAuthenticated, hasRole("founder"), async (req, res) => {
+    try {
+      const user = req.user as any;
+      
+      await sendLicenseViolationEmail({
+        userEmail: user.email,
+        userName: user.username || user.email,
+        licenseKey: "TEST-XXXX-YYYY-ZZZZ",
+        productName: "Discord Bot (Test)",
+        maxActivations: 1,
+        attemptedGuildId: "987654321098765432",
+        attemptedGuildName: "Test Server B",
+        currentGuildId: "123456789012345678",
+        attemptedAt: new Date(),
+      });
+
+      res.json({ 
+        success: true, 
+        message: `Test email sent successfully to ${user.email}` 
+      });
+    } catch (error: any) {
+      console.error("Failed to send test email:", error);
+      res.status(500).json({ 
+        error: "Failed to send test email", 
+        details: error.message 
+      });
     }
   });
 

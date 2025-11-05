@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SiDiscord } from "react-icons/si";
-import { Key, Copy, Trash2, Plus } from "lucide-react";
+import { Key, Copy, Trash2, Plus, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -193,6 +193,26 @@ export default function SettingsPage() {
     setDeleteDialogOpen(true);
   };
 
+  const sendTestEmailMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/test-email", {});
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Test email sent successfully! Check your inbox.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send test email",
+        variant: "destructive",
+      });
+    },
+  });
+
   return (
     <div className="space-y-8">
       <div>
@@ -201,6 +221,31 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Email Testing
+            </CardTitle>
+            <CardDescription>
+              Send a test license violation email to verify email integration
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => sendTestEmailMutation.mutate()}
+              disabled={sendTestEmailMutation.isPending}
+              data-testid="button-send-test-email"
+            >
+              <Mail className="h-4 w-4 mr-2" />
+              {sendTestEmailMutation.isPending ? "Sending..." : "Send Test Email"}
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2">
+              This will send a sample license violation email to your account email
+            </p>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Discord Integration</CardTitle>

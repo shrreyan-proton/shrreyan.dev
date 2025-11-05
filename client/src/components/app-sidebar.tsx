@@ -88,7 +88,7 @@ export function AppSidebar() {
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
   
-  const effectiveRole = user?.role ?? (user?.isAdmin ? "admin" : "customer");
+  const effectiveRole: string = user?.role ?? (user?.isAdmin ? "admin" : "customer");
   const menuItems = user?.isAdmin ? adminMenuItems : userMenuItems;
 
   const handleLogout = async () => {
