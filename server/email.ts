@@ -248,14 +248,26 @@ export async function sendLicenseViolationEmail(params: LicenseViolationEmailPar
           <div class="email-wrapper">
             <div class="container">
               <div class="brand-header">
-                <div style="margin-bottom: 20px;">
-                  <div style="background: white; width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-                    <span style="font-size: 42px;">🔐</span>
-                  </div>
-                </div>
-                <div class="brand-logo">License Manager</div>
-                <p class="brand-tagline">by Shrreyan</p>
-                <div class="alert-badge">⚠️ SECURITY ALERT</div>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td align="center" style="padding-bottom: 20px;">
+                      <table cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td style="background: white; width: 80px; height: 80px; border-radius: 50%; text-align: center; vertical-align: middle; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                            <span style="font-size: 42px; line-height: 80px;">🔐</span>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center">
+                      <div class="brand-logo">License Manager</div>
+                      <p class="brand-tagline">by Shrreyan</p>
+                      <div class="alert-badge">⚠️ SECURITY ALERT</div>
+                    </td>
+                  </tr>
+                </table>
               </div>
             <div class="content">
               <p class="greeting">Hello ${params.userName},</p>
