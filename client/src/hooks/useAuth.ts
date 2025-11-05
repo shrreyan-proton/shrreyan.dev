@@ -53,8 +53,8 @@ export function useAuth() {
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.clear();
-      setLocation("/login");
+      queryClient.removeQueries();
+      window.location.href = "/login";
     },
   });
 

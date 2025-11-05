@@ -130,73 +130,139 @@ export default function MyLicensesPage() {
               No products assigned yet. Contact an administrator to get access to products.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>License Key</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Expires</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-4">
                 {licenses.map((license) => (
-                  <TableRow key={license.id} data-testid={`row-license-${license.id}`}>
-                    <TableCell className="font-medium" data-testid={`text-product-${license.id}`}>
-                      {license.productName}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm" data-testid={`text-key-${license.id}`}>
-                      {license.key}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(license.status)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground" data-testid={`text-expiry-${license.id}`}>
-                      {license.expiresAt 
+                  <div key={license.id} className="border rounded-md p-4" data-testid={`row-license-${license.id}`}>
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium mb-1" data-testid={`text-product-${license.id}`}>
+                          {license.productName}
+                        </div>
+                        <div className="font-mono text-sm text-muted-foreground truncate" data-testid={`text-key-${license.id}`}>
+                          {license.key}
+                        </div>
+                      </div>
+                      {getStatusBadge(license.status)}
+                    </div>
+                    <div className="text-sm text-muted-foreground mb-3" data-testid={`text-expiry-${license.id}`}>
+                      Expires: {license.expiresAt 
                         ? format(new Date(license.expiresAt), "MMM d, yyyy") 
                         : "Never"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {license.productDownloadUrl && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownload(license.productDownloadUrl, license.productName)}
-                            data-testid={`button-download-${license.id}`}
-                            title="Download product"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {license.productDownloadUrl && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownload(license.productDownloadUrl, license.productName)}
+                          data-testid={`button-download-${license.id}`}
+                          className="flex-1"
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopy(license.key)}
+                        data-testid={`button-copy-${license.id}`}
+                        title="Copy license key"
+                      >
+                        {copiedKey === license.key ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
                         )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleCopy(license.key)}
-                          data-testid={`button-copy-${license.id}`}
-                          title="Copy license key"
-                        >
-                          {copiedKey === license.key ? (
-                            <Check className="h-4 w-4" />
-                          ) : (
-                            <Copy className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRegenerate(license.id)}
-                          disabled={regenerateMutation.isPending}
-                          data-testid={`button-regenerate-${license.id}`}
-                          title="Regenerate license key"
-                        >
-                          <RefreshCw className={`h-4 w-4 ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRegenerate(license.id)}
+                        disabled={regenerateMutation.isPending}
+                        data-testid={`button-regenerate-${license.id}`}
+                        title="Regenerate license key"
+                      >
+                        <RefreshCw className={`h-4 w-4 ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
+                      </Button>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>License Key</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Expires</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {licenses.map((license) => (
+                      <TableRow key={license.id} data-testid={`row-license-${license.id}`}>
+                        <TableCell className="font-medium" data-testid={`text-product-${license.id}`}>
+                          {license.productName}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm" data-testid={`text-key-${license.id}`}>
+                          {license.key}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(license.status)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground" data-testid={`text-expiry-${license.id}`}>
+                          {license.expiresAt 
+                            ? format(new Date(license.expiresAt), "MMM d, yyyy") 
+                            : "Never"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {license.productDownloadUrl && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownload(license.productDownloadUrl, license.productName)}
+                                data-testid={`button-download-${license.id}`}
+                                title="Download product"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCopy(license.key)}
+                              data-testid={`button-copy-${license.id}`}
+                              title="Copy license key"
+                            >
+                              {copiedKey === license.key ? (
+                                <Check className="h-4 w-4" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRegenerate(license.id)}
+                              disabled={regenerateMutation.isPending}
+                              data-testid={`button-regenerate-${license.id}`}
+                              title="Regenerate license key"
+                            >
+                              <RefreshCw className={`h-4 w-4 ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

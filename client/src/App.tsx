@@ -28,13 +28,13 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <div className="flex h-screen w-full">
         <AppSidebar />
-        <div className="flex flex-col flex-1">
-          <header className="flex items-center justify-between p-4 border-b">
+        <div className="flex flex-col flex-1 min-w-0">
+          <header className="flex items-center justify-between px-4 py-3 border-b">
             <SidebarTrigger data-testid="button-sidebar-toggle" />
             <ThemeToggle />
           </header>
           <main className="flex-1 overflow-auto">
-            <div className="container max-w-7xl mx-auto p-6 lg:p-8 min-h-full flex flex-col">
+            <div className="container max-w-7xl mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 min-h-full flex flex-col">
               <div className="flex-1">
                 {children}
               </div>
