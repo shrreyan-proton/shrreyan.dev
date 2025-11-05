@@ -111,7 +111,7 @@ export function Footer() {
 
         <div className="mt-8 pt-6 border-t text-center text-sm text-muted-foreground">
           <p data-testid="text-copyright">
-            &copy; {currentYear} License Manager. All rights reserved.
+            &copy; {currentYear} Shrreyan Dev. All rights reserved.
           </p>
         </div>
       </div>

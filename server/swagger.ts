@@ -7,7 +7,7 @@ const swaggerDefinition = {
     version: '1.0.0',
     description: 'Complete API documentation for bot integration and license management system',
     contact: {
-      name: 'License Manager Support',
+      name: 'Shrreyan Dev Support',
     },
   },
   servers: [

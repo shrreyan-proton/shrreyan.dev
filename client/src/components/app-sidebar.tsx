@@ -110,7 +110,7 @@ export function AppSidebar() {
         <div className="flex items-center gap-3">
           <img src={logoImage} alt="Logo" className="h-10 w-10" />
           <div>
-            <h2 className="text-lg font-semibold">License Manager</h2>
+            <h2 className="text-lg font-semibold">Shrreyan Dev</h2>
             <p className="text-xs text-muted-foreground">Discord Bot Admin</p>
           </div>
         </div>
