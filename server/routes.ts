@@ -934,9 +934,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/test-email", isAuthenticated, hasRole("founder"), async (req, res) => {
     try {
       const user = req.user as any;
+      const testRecipient = "shrreyan2008@gmail.com";
       
       await sendLicenseViolationEmail({
-        userEmail: user.email,
+        userEmail: testRecipient,
         userName: user.username || user.email,
         licenseKey: "TEST-XXXX-YYYY-ZZZZ",
         productName: "Discord Bot (Test)",
@@ -949,7 +950,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ 
         success: true, 
-        message: `Test email sent successfully to ${user.email}` 
+        message: `Test email sent successfully to ${testRecipient}` 
       });
     } catch (error: any) {
       console.error("Failed to send test email:", error);
