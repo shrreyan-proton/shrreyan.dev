@@ -127,7 +127,7 @@ export default function MyLicensesPage() {
             <div className="text-center py-8 text-muted-foreground">Loading...</div>
           ) : licenses.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No products assigned yet. Contact an administrator to get access to products.
+              You haven't purchased any products yet buy now..
             </div>
           ) : (
             <>
