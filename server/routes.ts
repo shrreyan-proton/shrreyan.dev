@@ -1,11 +1,12 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isAdmin, initializeDiscordStrategy } from "./auth";
+import { setupAuth, isAuthenticated, isAdmin, initializeDiscordStrategy, hasRole } from "./auth";
 import passport from "passport";
 import { insertUserSchema, insertLicenseSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
+import { LicenseViolation } from "./models/LicenseViolation";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -868,6 +869,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to fetch bot events:", error);
       res.status(500).json({ error: "Failed to fetch bot events" });
+    }
+  });
+
+  // License Violation Routes
+  app.get("/api/violations", isAuthenticated, hasRole("founder", "admin", "staff"), async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const violations = await LicenseViolation.find()
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .populate("userId", "username email")
+        .populate("licenseId", "key productName");
+      
+      res.json(violations);
+    } catch (error) {
+      console.error("Failed to fetch violations:", error);
+      res.status(500).json({ error: "Failed to fetch violations" });
+    }
+  });
+
+  app.get("/api/violations/license/:licenseId", isAuthenticated, hasRole("founder", "admin", "staff"), async (req, res) => {
+    try {
+      const { licenseId } = req.params;
+      const violations = await LicenseViolation.find({ licenseId })
+        .sort({ createdAt: -1 })
+        .populate("userId", "username email");
+      
+      res.json(violations);
+    } catch (error) {
+      console.error("Failed to fetch license violations:", error);
+      res.status(500).json({ error: "Failed to fetch license violations" });
+    }
+  });
+
+  app.get("/api/violations/stats", isAuthenticated, hasRole("founder", "admin"), async (req, res) => {
+    try {
+      const totalViolations = await LicenseViolation.countDocuments();
+      const last24Hours = await LicenseViolation.countDocuments({
+        createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+      });
+      const last7Days = await LicenseViolation.countDocuments({
+        createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+      });
+      
+      const violationsByType = await LicenseViolation.aggregate([
+        { $group: { _id: "$violationType", count: { $sum: 1 } } }
+      ]);
+
+      res.json({
+        total: totalViolations,
+        last24Hours,
+        last7Days,
+        byType: violationsByType,
+      });
+    } catch (error) {
+      console.error("Failed to fetch violation stats:", error);
+      res.status(500).json({ error: "Failed to fetch violation stats" });
     }
   });
 
