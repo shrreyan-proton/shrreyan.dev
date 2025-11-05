@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
-import { User, Mail, UserCircle, Shield, Image, X, Upload, Camera, ZoomIn, ZoomOut, UserCog, ShoppingBag, Crown } from "lucide-react";
+import { User, Mail, UserCircle, Shield, Image, X, Upload, Camera, ZoomIn, ZoomOut, UserCog, ShoppingBag, Crown, Link as LinkIcon, Unlink } from "lucide-react";
+import { SiDiscord } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -32,6 +33,18 @@ export default function ProfilePage() {
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("discord_linked") === "true") {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      toast({
+        title: "Success",
+        description: "Discord account linked successfully",
+      });
+      window.history.replaceState({}, "", "/profile");
+    }
+  }, [toast]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: { username?: string; password?: string; currentPassword?: string; oldPassword?: string; profilePicture?: string }) => {
@@ -62,6 +75,26 @@ export default function ProfilePage() {
       toast({
         title: "Error",
         description: error.message || "Failed to update profile",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const unlinkDiscordMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/auth/discord/unlink", {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      toast({
+        title: "Success",
+        description: "Discord account unlinked successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to unlink Discord account",
         variant: "destructive",
       });
     },
@@ -250,6 +283,14 @@ export default function ProfilePage() {
     setUploadDialogOpen(true);
   };
 
+  const handleLinkDiscord = () => {
+    window.location.href = "/api/auth/discord/link";
+  };
+
+  const handleUnlinkDiscord = () => {
+    unlinkDiscordMutation.mutate();
+  };
+
   const getUserInitials = (username?: string) => {
     if (!username) return "U";
     return username.substring(0, 2).toUpperCase();
@@ -423,6 +464,55 @@ export default function ProfilePage() {
             >
               {updateProfileMutation.isPending ? "Updating..." : "Update Password"}
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <SiDiscord className="h-5 w-5" />
+              Discord Account
+            </CardTitle>
+            <CardDescription>
+              Link your Discord account for additional features
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {user?.discordId ? (
+              <>
+                <div className="space-y-2">
+                  <Label>Linked Discord Account</Label>
+                  <div className="flex items-center gap-2 p-3 rounded-md bg-muted">
+                    <SiDiscord className="h-5 w-5 text-[#5865F2]" />
+                    <span className="font-medium" data-testid="text-linked-discord-username">
+                      {user.discordUsername}
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  data-testid="button-unlink-discord"
+                  onClick={handleUnlinkDiscord}
+                  disabled={unlinkDiscordMutation.isPending}
+                >
+                  <Unlink className="h-4 w-4 mr-2" />
+                  {unlinkDiscordMutation.isPending ? "Unlinking..." : "Unlink Discord Account"}
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  No Discord account linked. Link your Discord account to enable additional features and integrations.
+                </p>
+                <Button
+                  data-testid="button-link-discord"
+                  onClick={handleLinkDiscord}
+                >
+                  <LinkIcon className="h-4 w-4 mr-2" />
+                  Link Discord Account
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

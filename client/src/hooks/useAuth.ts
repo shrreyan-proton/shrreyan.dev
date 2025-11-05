@@ -8,6 +8,7 @@ interface AuthUser {
   email: string;
   role: "user" | "customer" | "staff" | "admin" | "founder";
   isAdmin: boolean;
+  discordId?: string;
   discordUsername?: string;
   profilePicture?: string;
 }

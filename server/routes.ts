@@ -243,10 +243,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/auth/discord/callback", 
     passport.authenticate("discord", { 
-      failureRedirect: "/",
-      successRedirect: "/" 
-    })
+      failureRedirect: "/"
+    }),
+    async (req, res) => {
+      if ((req.session as any)?.discordLinking) {
+        delete (req.session as any).discordLinking;
+        delete (req.session as any).linkingUserId;
+        res.redirect("/profile?discord_linked=true");
+      } else {
+        res.redirect("/");
+      }
+    }
   );
+
+  app.get("/api/auth/discord/link", isAuthenticated, async (req, res, next) => {
+    const config = await storage.getDiscordConfig();
+    if (!config || !config.clientId) {
+      return res.status(400).json({ error: "Discord OAuth not configured" });
+    }
+    (req.session as any).discordLinking = true;
+    (req.session as any).linkingUserId = (req.user as any).id;
+    passport.authenticate("discord")(req, res, next);
+  });
+
+  app.post("/api/auth/discord/unlink", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.updateUser(userId, {
+        discordId: undefined,
+        discordUsername: undefined,
+      });
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to unlink Discord account" });
+    }
+  });
 
   /**
    * @swagger

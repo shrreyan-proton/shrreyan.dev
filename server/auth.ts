@@ -68,9 +68,28 @@ export async function initializeDiscordStrategy() {
         clientSecret: config.clientSecret,
         callbackURL: config.redirectUri,
         scope: ["identify", "email"],
+        passReqToCallback: true,
       },
-      async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+      async (req: any, accessToken: string, refreshToken: string, profile: any, done: any) => {
         try {
+          const isLinking = req.session?.discordLinking;
+          const linkingUserId = req.session?.linkingUserId;
+
+          if (isLinking && linkingUserId) {
+            const existingUserWithDiscord = await storage.getUserByDiscordId(profile.id);
+            
+            if (existingUserWithDiscord && existingUserWithDiscord.id !== linkingUserId) {
+              return done(new Error("This Discord account is already linked to another user"), null);
+            }
+
+            const user = await storage.updateUser(linkingUserId, {
+              discordId: profile.id,
+              discordUsername: profile.username,
+            });
+            
+            return done(null, user);
+          }
+
           let user = await storage.getUserByDiscordId(profile.id);
           
           if (user) {
