@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Footer } from "@/components/Footer";
 import { Redirect } from "@/components/Redirect";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
@@ -47,10 +48,16 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function AdminRoute({ component: Component }: { component: React.ComponentType }) {
-  const { user } = useAuth();
+function ProtectedRoute({ 
+  component: Component, 
+  requirePermission 
+}: { 
+  component: React.ComponentType;
+  requirePermission: () => boolean;
+}) {
+  const hasPermission = requirePermission();
   
-  if (!user?.isAdmin) {
+  if (!hasPermission) {
     return <Redirect to="/" />;
   }
   
@@ -59,7 +66,8 @@ function AdminRoute({ component: Component }: { component: React.ComponentType }
 
 function Router() {
   const [location] = useLocation();
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  const { can } = usePermissions();
 
   if (isLoading) {
     return (
@@ -89,27 +97,27 @@ function Router() {
     <AuthenticatedLayout>
       <Switch>
         <Route path="/">
-          {user?.isAdmin ? <DashboardPage /> : <MyLicensesPage />}
+          {can.viewLicenses() ? <DashboardPage /> : <MyLicensesPage />}
         </Route>
         <Route path="/licenses">
-          <AdminRoute component={LicensesPage} />
+          <ProtectedRoute component={LicensesPage} requirePermission={can.viewLicenses} />
         </Route>
         <Route path="/bots">
-          <AdminRoute component={BotMonitorPage} />
+          <ProtectedRoute component={BotMonitorPage} requirePermission={can.viewBots} />
         </Route>
         <Route path="/users">
-          <AdminRoute component={UsersPage} />
+          <ProtectedRoute component={UsersPage} requirePermission={can.viewUsers} />
         </Route>
         <Route path="/settings">
-          <AdminRoute component={SettingsPage} />
+          <ProtectedRoute component={SettingsPage} requirePermission={can.viewSettings} />
         </Route>
         <Route path="/profile" component={ProfilePage} />
         <Route path="/products" component={ProductsPage} />
         <Route path="/docs">
-          <AdminRoute component={DocsPage} />
+          <ProtectedRoute component={DocsPage} requirePermission={can.viewDocs} />
         </Route>
         <Route path="/violations">
-          <AdminRoute component={ViolationsPage} />
+          <ProtectedRoute component={ViolationsPage} requirePermission={can.viewViolations} />
         </Route>
         <Route component={NotFound} />
       </Switch>

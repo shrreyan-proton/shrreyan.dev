@@ -53,7 +53,7 @@ export function usePermissions() {
     viewSettings: () => hasRole("founder", "admin"),
     editSettings: () => hasRole("founder", "admin"),
 
-    viewDocs: () => hasRole("founder", "admin", "staff"),
+    viewDocs: () => hasRole("founder", "admin"),
   };
 
   return {
