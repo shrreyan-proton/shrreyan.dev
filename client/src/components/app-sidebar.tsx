@@ -1,4 +1,4 @@
-import { Home, Key, Users, Settings, LogOut, User, UserCircle, Package, Shield, UserCog, ShoppingBag, BookOpen, Activity } from "lucide-react";
+import { Home, Key, Users, Settings, LogOut, User, UserCircle, Package, Shield, UserCog, ShoppingBag, BookOpen, Activity, AlertTriangle } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -42,6 +42,12 @@ const adminMenuItems = [
     url: "/bots",
     icon: Activity,
     testId: "link-bots",
+  },
+  {
+    title: "Violations",
+    url: "/violations",
+    icon: AlertTriangle,
+    testId: "link-violations",
   },
   {
     title: "Users",
@@ -148,10 +154,12 @@ export function AppSidebar() {
                   {user?.username || user?.email || "Admin"}
                 </span>
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  {effectiveRole === "founder" && <Shield className="h-3 w-3" />}
                   {effectiveRole === "admin" && <Shield className="h-3 w-3" />}
                   {effectiveRole === "staff" && <UserCog className="h-3 w-3" />}
                   {effectiveRole === "customer" && <ShoppingBag className="h-3 w-3" />}
                   {effectiveRole === "user" && <UserCircle className="h-3 w-3" />}
+                  {effectiveRole === "founder" && "Founder"}
                   {effectiveRole === "admin" && "Admin"}
                   {effectiveRole === "staff" && "Staff"}
                   {effectiveRole === "customer" && "Customer"}

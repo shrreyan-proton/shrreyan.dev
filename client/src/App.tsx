@@ -20,6 +20,7 @@ import MyLicensesPage from "@/pages/MyLicensesPage";
 import ProductsPage from "@/pages/ProductsPage";
 import DocsPage from "@/pages/DocsPage";
 import BotMonitorPage from "@/pages/BotMonitorPage";
+import ViolationsPage from "@/pages/ViolationsPage";
 
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -101,6 +102,9 @@ function Router() {
         <Route path="/products" component={ProductsPage} />
         <Route path="/docs">
           <AdminRoute component={DocsPage} />
+        </Route>
+        <Route path="/violations">
+          <AdminRoute component={ViolationsPage} />
         </Route>
         <Route component={NotFound} />
       </Switch>
