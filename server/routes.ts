@@ -8,6 +8,7 @@ import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 import { LicenseViolation } from "./models/LicenseViolation";
 import { sendLicenseViolationEmail } from "./email";
+import mongoose from "mongoose";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -733,6 +734,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(config);
     } catch (error: any) {
       res.status(400).json({ error: error.message || "Failed to save Discord configuration" });
+    }
+  });
+
+  // MongoDB status route
+  app.get("/api/database-status", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const readyState = mongoose.connection.readyState;
+      const states = {
+        0: 'disconnected',
+        1: 'connected',
+        2: 'connecting',
+        3: 'disconnecting',
+      };
+      
+      const status = {
+        connected: readyState === 1,
+        state: states[readyState as keyof typeof states] || 'unknown',
+        host: mongoose.connection.host || 'Not connected',
+        dbName: mongoose.connection.name || 'Not connected',
+        readyState: readyState
+      };
+      
+      res.json(status);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to fetch database status" });
     }
   });
 

@@ -39,6 +39,14 @@ interface BotApiKey {
   key?: string; // Only present on creation
 }
 
+interface DatabaseStatus {
+  connected: boolean;
+  state: string;
+  host: string;
+  dbName: string;
+  readyState: number;
+}
+
 export default function SettingsPage() {
   const { toast } = useToast();
   const [config, setConfig] = useState<DiscordConfig>({
@@ -58,6 +66,11 @@ export default function SettingsPage() {
 
   const { data: apiKeys = [], isLoading: isLoadingKeys } = useQuery<BotApiKey[]>({
     queryKey: ["/api/bot-api-keys"],
+  });
+
+  const { data: dbStatus, isLoading: isLoadingDbStatus } = useQuery<DatabaseStatus>({
+    queryKey: ["/api/database-status"],
+    refetchInterval: 5000, // Refresh every 5 seconds for real-time status
   });
 
   useEffect(() => {
@@ -388,20 +401,53 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle>Database Configuration</CardTitle>
             <CardDescription>
-              PostgreSQL database connection settings
+              MongoDB database connection settings
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Database Status</Label>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500" />
-                <span className="text-sm text-muted-foreground">Connected to PostgreSQL</span>
-              </div>
-            </div>
+            {isLoadingDbStatus ? (
+              <div className="text-sm text-muted-foreground">Loading database status...</div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label>Database Status</Label>
+                  <div className="flex items-center gap-2">
+                    <div className={`h-2 w-2 rounded-full ${dbStatus?.connected ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <span className="text-sm text-muted-foreground">
+                      {dbStatus?.connected ? 'Connected to MongoDB' : 'Disconnected from MongoDB'}
+                    </span>
+                  </div>
+                </div>
+                
+                {dbStatus?.connected && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Database Name</Label>
+                      <div className="text-sm text-muted-foreground font-mono">
+                        {dbStatus.dbName}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Host</Label>
+                      <div className="text-sm text-muted-foreground font-mono">
+                        {dbStatus.host}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Connection State</Label>
+                      <Badge variant="outline" className="capitalize">
+                        {dbStatus.state}
+                      </Badge>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
             <Separator />
             <div className="text-sm text-muted-foreground">
-              Database connection is managed automatically via environment variables.
+              Database connection is managed automatically. Real-time status updates every 5 seconds.
             </div>
           </CardContent>
         </Card>
