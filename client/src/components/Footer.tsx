@@ -36,18 +36,6 @@ export function Footer() {
                   Contact
                 </a>
               </li>
-              <li>
-                <a
-                  href="https://discord.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
-                  data-testid="link-footer-discord"
-                >
-                  Discord Server
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </li>
             </ul>
           </div>
 
