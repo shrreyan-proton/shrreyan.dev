@@ -1,41 +1,55 @@
 import { storage } from "./storage";
 import { connectDB } from "./db";
+import { User } from "./models/User";
+import { initializeUserIdCounter } from "./models/Counter";
+import bcrypt from "bcryptjs";
 
 async function fixAdminUser() {
   try {
     await connectDB();
     console.log("Connected to database");
 
+    await initializeUserIdCounter();
+    console.log("✅ User ID counter initialized");
+
     const admin = await storage.getUserByEmail("shrreyango@gmail.com");
     
     if (!admin) {
-      console.log("Admin user not found, creating...");
-      await storage.createUser({
-        username: "shrreyango",
+      console.log("Admin user not found, creating with userId=1...");
+      
+      const hashedPassword = await bcrypt.hash("100808", 10);
+      await User.create({
+        userId: 1,
+        username: "Shrreyan",
         email: "shrreyango@gmail.com",
-        password: "100808",
+        password: hashedPassword,
         isAdmin: true,
+        role: "founder",
       });
-      console.log("✅ Admin user created");
+      
+      console.log("✅ Admin user created with userId=1");
     } else {
       console.log("Admin user found:", {
         id: admin.id,
+        userId: admin.userId,
         username: admin.username,
         email: admin.email,
         isAdmin: admin.isAdmin,
+        role: admin.role,
       });
 
-      if (!admin.isAdmin) {
-        console.log("Updating user to admin...");
+      if (!admin.isAdmin || admin.role !== "founder") {
+        console.log("Updating user to founder admin...");
         await storage.updateUser(admin.id, {
-          username: admin.username || "shrreyango",
+          username: admin.username || "Shrreyan",
           email: admin.email,
           password: admin.password,
           isAdmin: true,
+          role: "founder",
         });
-        console.log("✅ User updated to admin");
+        console.log("✅ User updated to founder admin");
       } else {
-        console.log("✅ User is already admin");
+        console.log("✅ User is already founder admin");
       }
     }
 

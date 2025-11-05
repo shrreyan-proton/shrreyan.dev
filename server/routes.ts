@@ -76,6 +76,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   /**
    * @swagger
+   * /auth/register:
+   *   post:
+   *     summary: User registration
+   *     description: Register a new user account
+   *     tags: [Authentication]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - username
+   *               - email
+   *               - password
+   *             properties:
+   *               username:
+   *                 type: string
+   *                 description: Username (minimum 3 characters)
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 description: Email address
+   *               password:
+   *                 type: string
+   *                 format: password
+   *                 description: Password (minimum 6 characters)
+   *     responses:
+   *       200:
+   *         description: Registration successful
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 user:
+   *                   $ref: '#/components/schemas/User'
+   *       400:
+   *         description: Invalid input or user already exists
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { username, email, password } = req.body;
+      
+      if (!username || !email || !password) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+
+      const existingUserByEmail = await storage.getUserByEmail(email);
+      if (existingUserByEmail) {
+        return res.status(400).json({ error: "Email already registered" });
+      }
+
+      const validated = insertUserSchema.parse({
+        username,
+        email,
+        password,
+        role: "customer",
+        isAdmin: false,
+      });
+
+      const user = await storage.createUser(validated);
+      
+      req.logIn(user, (err) => {
+        if (err) {
+          return res.status(500).json({ error: "Registration successful but login failed" });
+        }
+        const { password, ...userWithoutPassword } = user;
+        return res.json({ user: userWithoutPassword });
+      });
+    } catch (error: any) {
+      if (error.code === 11000) {
+        return res.status(400).json({ error: "Username or email already exists" });
+      }
+      res.status(400).json({ error: error.message || "Failed to register user" });
+    }
+  });
+
+  /**
+   * @swagger
    * /auth/logout:
    *   post:
    *     summary: User logout

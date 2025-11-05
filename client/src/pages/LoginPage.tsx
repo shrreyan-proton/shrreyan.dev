@@ -9,6 +9,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import logoImage from "@assets/logo_1762262685070.png";
 import { useAuth } from "@/hooks/useAuth";
+import { Link } from "wouter";
 
 export default function LoginPage() {
   const { toast } = useToast();
@@ -122,6 +123,13 @@ export default function LoginPage() {
             <SiDiscord className="h-5 w-5 mr-2" />
             Continue with Discord
           </Button>
+
+          <div className="text-center text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link href="/register" data-testid="link-register">
+              <span className="text-primary hover:underline cursor-pointer">Create account</span>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

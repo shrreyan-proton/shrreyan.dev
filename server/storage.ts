@@ -4,6 +4,7 @@ import { License } from "./models/License";
 import { DiscordConfig } from "./models/DiscordConfig";
 import { BotApiKey } from "./models/BotApiKey";
 import { BotEvent } from "./models/BotEvent";
+import { getNextUserId } from "./models/Counter";
 import bcrypt from "bcryptjs";
 
 export interface DiscordConfigType {
@@ -67,8 +68,10 @@ export class MongoStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<UserType> {
     const hashedPassword = await bcrypt.hash(insertUser.password, 10);
+    const userId = await getNextUserId();
     const user = await User.create({
       ...insertUser,
+      userId,
       password: hashedPassword,
       email: insertUser.email.toLowerCase(),
     });
@@ -226,6 +229,7 @@ export class MongoStorage implements IStorage {
   private formatUser(user: any): UserType {
     return {
       id: user._id.toString(),
+      userId: user.userId,
       username: user.username,
       email: user.email,
       password: user.password,

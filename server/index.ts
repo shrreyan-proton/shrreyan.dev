@@ -5,6 +5,7 @@ import { registerBotRoutes } from "./bot-routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { connectDB } from "./db";
 import { seedDatabase } from "./seed";
+import { initializeUserIdCounter } from "./models/Counter";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./swagger";
 
@@ -74,6 +75,9 @@ app.use((req, res, next) => {
   
   // Seed the database
   await seedDatabase();
+  
+  // Initialize user ID counter (starts at 99, first user gets 100)
+  await initializeUserIdCounter();
   
   // Swagger UI Documentation
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

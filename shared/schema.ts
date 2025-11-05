@@ -16,6 +16,7 @@ export const insertUserSchema = z.object({
 
 export const userSchema = insertUserSchema.extend({
   id: z.string(),
+  userId: z.number(),
   createdAt: z.date(),
 });
 

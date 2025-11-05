@@ -4,6 +4,7 @@ export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
+  userId: number;
   discordId?: string;
   discordUsername?: string;
   role: "user" | "customer" | "staff" | "admin" | "founder";
@@ -29,6 +30,11 @@ const UserSchema = new Schema<IUser>({
   password: {
     type: String,
     required: true,
+  },
+  userId: {
+    type: Number,
+    required: true,
+    unique: true,
   },
   discordId: {
     type: String,

@@ -11,6 +11,7 @@ import { Redirect } from "@/components/Redirect";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/LoginPage";
+import RegisterPage from "@/pages/RegisterPage";
 import DashboardPage from "@/pages/DashboardPage";
 import LicensesPage from "@/pages/LicensesPage";
 import UsersPage from "@/pages/UsersPage";
@@ -68,16 +69,20 @@ function Router() {
     );
   }
 
-  if (!isAuthenticated && location !== "/login") {
+  if (!isAuthenticated && location !== "/login" && location !== "/register") {
     return <LoginPage />;
   }
 
-  if (isAuthenticated && location === "/login") {
+  if (isAuthenticated && (location === "/login" || location === "/register")) {
     return <Redirect to="/" />;
   }
 
   if (location === "/login") {
     return <LoginPage />;
+  }
+
+  if (location === "/register") {
+    return <RegisterPage />;
   }
 
   return (
