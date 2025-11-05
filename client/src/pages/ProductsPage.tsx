@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, ExternalLink, Package } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Product {
   id: string;
@@ -24,9 +25,27 @@ const products: Product[] = [
 ];
 
 export default function ProductsPage() {
+  const { toast } = useToast();
+
   const handleBuyNow = () => {
-    // Handle purchase/redirect logic here
-    console.log("Buy Now clicked");
+    toast({
+      title: "Contact Administrator",
+      description: "Please contact an administrator to purchase this product.",
+    });
+  };
+
+  const handleDocumentation = () => {
+    toast({
+      title: "Coming Soon",
+      description: "Documentation will be available soon.",
+    });
+  };
+
+  const handleSupport = () => {
+    toast({
+      title: "Contact Support",
+      description: "Please reach out to your administrator for support.",
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -103,11 +122,11 @@ export default function ProductsPage() {
             Check out our documentation or contact support for assistance with product setup and configuration.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" data-testid="button-documentation">
+            <Button variant="outline" size="sm" data-testid="button-documentation" onClick={handleDocumentation}>
               <ExternalLink className="h-4 w-4 mr-2" />
               Documentation
             </Button>
-            <Button variant="outline" size="sm" data-testid="button-support">
+            <Button variant="outline" size="sm" data-testid="button-support" onClick={handleSupport}>
               <ExternalLink className="h-4 w-4 mr-2" />
               Contact Support
             </Button>
