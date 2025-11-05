@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LicenseTable } from "@/components/LicenseTable";
 import { CreateLicenseDialog } from "@/components/CreateLicenseDialog";
+import { EditLicenseDialog } from "@/components/EditLicenseDialog";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -10,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 export default function LicensesPage() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingLicense, setEditingLicense] = useState<any | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const { data: licenses = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/licenses"],
@@ -71,6 +74,27 @@ export default function LicensesPage() {
     },
   });
 
+  const editLicenseMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest("PATCH", `/api/licenses/${id}`, data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/licenses"] });
+      toast({
+        title: "Success",
+        description: "License updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update license",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredLicenses = licenses.filter(
     (license) =>
       license.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -103,11 +127,25 @@ export default function LicensesPage() {
       ) : (
         <LicenseTable
           licenses={filteredLicenses}
-          onEdit={(license) => console.log("Edit license:", license)}
+          onEdit={(license) => {
+            setEditingLicense(license);
+            setEditDialogOpen(true);
+          }}
           onDelete={(license) => deleteLicenseMutation.mutate(license.id)}
           onReset={(license) => resetLicenseMutation.mutate(license.id)}
         />
       )}
+
+      <EditLicenseDialog
+        license={editingLicense}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSubmit={(data) => {
+          if (editingLicense) {
+            editLicenseMutation.mutate({ id: editingLicense.id, data });
+          }
+        }}
+      />
     </div>
   );
 }
