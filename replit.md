@@ -49,13 +49,16 @@ Preferred communication style: Simple, everyday language.
 
 **Authentication Flow:**
 - Email/password authentication via Passport Local Strategy
+- User registration available at `/register` route
 - Bcrypt for password hashing (10 rounds)
 - Express sessions with configurable secret and cookie settings
-- Role-based access control with `isAdmin` flag on user records
+- Role-based access control with `isAdmin` flag and `role` field on user records
+- Discord OAuth integration for social login
 
 **API Design:**
 - RESTful API endpoints under `/api` prefix
 - Standard CRUD operations for users and licenses
+- Authentication endpoints: `/api/auth/login`, `/api/auth/register`, `/api/auth/logout`
 - Middleware for authentication (`isAuthenticated`) and authorization (`isAdmin`)
 - Centralized error handling and request/response logging
 
@@ -67,14 +70,23 @@ Preferred communication style: Simple, everyday language.
 ### Data Models
 
 **User Schema:**
-- Fields: id, email, password (hashed), discordId, discordUsername, isAdmin, createdAt
+- Fields: id (MongoDB ObjectId), userId (numeric auto-incrementing ID), username, email, password (hashed), discordId, discordUsername, role, isAdmin, profilePicture, createdAt
 - Email stored in lowercase for case-insensitive lookups
-- Discord fields optional for future OAuth integration
+- Discord fields optional for OAuth integration
+- **Numeric User IDs:** Each user is assigned a unique numeric userId starting from 100 for new registrations
+  - The founder account (Shrreyan) has userId=1
+  - Auto-incrementing counter managed via MongoDB Counter collection
+  - Counter initialized to 99, so first auto-increment gives userId=100
 
 **License Schema:**
 - Fields: id, key, userId (optional reference), status (active/expired/suspended), duration (months), createdAt, expiresAt
 - License keys follow format: `DISC-XXXX-XXXX-XXXX`
 - Expiration calculated from createdAt + duration
+
+**Counter Schema:**
+- Fields: _id (string identifier), seq (current sequence number)
+- Used for auto-incrementing numeric user IDs
+- Initialized to seq=99 for userId counter, so first user registration gets userId=100
 
 **Relationships:**
 - User → License: One-to-many (a user can have multiple licenses)
