@@ -82,7 +82,7 @@ app.use((req, res, next) => {
   // Swagger UI Documentation
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: "Shrreyan Dev API Documentation",
+    customSiteTitle: "Crimson Studios API Documentation",
   }));
   
   // Register bot API routes (before regular routes for priority)

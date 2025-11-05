@@ -49,7 +49,7 @@ export default function LoginPage() {
             <img src={logoImage} alt="Logo" className="h-16 w-16" />
           </div>
           <div>
-            <CardTitle className="text-2xl">Shrreyan Dev</CardTitle>
+            <CardTitle className="text-2xl">Crimson Studios</CardTitle>
             <CardDescription>Sign in to manage your Discord bot licenses</CardDescription>
           </div>
         </CardHeader>

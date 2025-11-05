@@ -262,7 +262,7 @@ export async function sendLicenseViolationEmail(params: LicenseViolationEmailPar
                   </tr>
                   <tr>
                     <td align="center">
-                      <div class="brand-logo">Shrreyan Dev</div>
+                      <div class="brand-logo">Crimson Studios</div>
                       <p class="brand-tagline">by Shrreyan</p>
                       <div class="alert-badge">⚠️ SECURITY ALERT</div>
                     </td>
@@ -333,7 +333,7 @@ export async function sendLicenseViolationEmail(params: LicenseViolationEmailPar
             </div>
             <div class="footer">
               <p class="footer-text">This is an automated security notification. If you did not attempt this activation, please contact support immediately.</p>
-              <p class="footer-brand">🔐 Shrreyan Dev by Shrreyan</p>
+              <p class="footer-brand">🔐 Crimson Studios by Shrreyan</p>
               <p class="footer-text">&copy; ${new Date().getFullYear()} License Management System. All rights reserved.</p>
             </div>
           </div>

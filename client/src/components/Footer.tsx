@@ -75,7 +75,7 @@ export function Footer() {
 
         <div className="mt-8 pt-6 border-t text-center text-sm text-muted-foreground">
           <p data-testid="text-copyright">
-            &copy; {currentYear} Shrreyan Dev. All rights reserved.
+            &copy; {currentYear} Crimson Studios. All rights reserved.
           </p>
         </div>
       </div>
