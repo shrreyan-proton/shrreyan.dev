@@ -62,6 +62,7 @@ interface LicenseExpiringSoonEmailParams {
 export async function sendLicenseViolationEmail(params: LicenseViolationEmailParams): Promise<void> {
   try {
     const { client, fromEmail } = await getUncachableResendClient();
+    console.log(`Sending email from: ${fromEmail} to: ${params.userEmail}`);
     
     const html = `
       <!DOCTYPE html>
@@ -182,7 +183,7 @@ Contact Support: support@example.com
 This is an automated security notification. If you did not attempt this activation, please contact support immediately.
     `;
 
-    await client.emails.send({
+    const response = await client.emails.send({
       from: fromEmail,
       to: params.userEmail,
       subject: `⚠️ License Violation Detected - ${params.licenseKey}`,
@@ -191,6 +192,7 @@ This is an automated security notification. If you did not attempt this activati
     });
 
     console.log(`✅ License violation email sent to ${params.userEmail}`);
+    console.log('Resend response:', JSON.stringify(response, null, 2));
   } catch (error) {
     console.error('Failed to send license violation email:', error);
     throw error;
