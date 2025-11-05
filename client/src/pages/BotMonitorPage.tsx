@@ -80,6 +80,7 @@ export default function BotMonitorPage() {
   const [eventsDialogOpen, setEventsDialogOpen] = useState(false);
   const [selectedBot, setSelectedBot] = useState<Bot | null>(null);
   const [shutdownReason, setShutdownReason] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: bots = [], isLoading, refetch } = useQuery<Bot[]>({
     queryKey: ["/api/admin/bots"],
@@ -159,6 +160,35 @@ export default function BotMonitorPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    toast({
+      title: "Refreshing...",
+      description: "Fetching latest bot data from heartbeats",
+    });
+    
+    try {
+      // Wait a moment to allow any in-flight heartbeats to be processed
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Refetch the data
+      await refetch();
+      
+      toast({
+        title: "Refreshed",
+        description: "Bot data updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to refresh bot data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const filteredBots = bots.filter(
     (bot) =>
       bot.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -188,12 +218,13 @@ export default function BotMonitorPage() {
           </p>
         </div>
         <Button
-          onClick={() => refetch()}
+          onClick={handleRefresh}
           variant="outline"
+          disabled={isRefreshing}
           data-testid="button-refresh"
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? "Refreshing..." : "Refresh"}
         </Button>
       </div>
 
