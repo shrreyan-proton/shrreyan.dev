@@ -68,84 +68,258 @@ export async function sendLicenseViolationEmail(params: LicenseViolationEmailPar
       <!DOCTYPE html>
       <html>
         <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #ef4444; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
-            .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
-            .alert { background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; }
-            .details { background: white; padding: 15px; border-radius: 4px; margin: 20px 0; }
-            .detail-row { display: flex; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
-            .detail-label { font-weight: bold; min-width: 150px; }
-            .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 12px; }
-            .button { display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin-top: 20px; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+              line-height: 1.6; 
+              color: #1f2937; 
+              margin: 0;
+              padding: 0;
+              background-color: #f3f4f6;
+            }
+            .email-wrapper { 
+              background-color: #f3f4f6; 
+              padding: 40px 20px; 
+            }
+            .container { 
+              max-width: 600px; 
+              margin: 0 auto; 
+              background: white;
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .brand-header { 
+              background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
+              color: white; 
+              padding: 30px 40px; 
+              text-align: center;
+            }
+            .brand-logo {
+              font-size: 32px;
+              font-weight: bold;
+              margin-bottom: 10px;
+              letter-spacing: -0.5px;
+            }
+            .brand-tagline {
+              font-size: 14px;
+              opacity: 0.9;
+              margin: 0;
+            }
+            .alert-badge {
+              display: inline-block;
+              background: rgba(255, 255, 255, 0.2);
+              padding: 8px 16px;
+              border-radius: 20px;
+              font-size: 13px;
+              font-weight: 600;
+              margin-top: 15px;
+              backdrop-filter: blur(10px);
+            }
+            .content { 
+              padding: 40px; 
+            }
+            .greeting {
+              font-size: 18px;
+              font-weight: 600;
+              color: #111827;
+              margin-bottom: 20px;
+            }
+            .alert { 
+              background: #fef2f2; 
+              border-left: 4px solid #ef4444; 
+              padding: 20px; 
+              margin: 25px 0; 
+              border-radius: 6px;
+            }
+            .alert-title {
+              font-weight: 700;
+              color: #991b1b;
+              font-size: 16px;
+              margin-bottom: 8px;
+            }
+            .alert-text {
+              color: #7f1d1d;
+              margin: 0;
+              font-size: 14px;
+            }
+            .details { 
+              background: #f9fafb; 
+              padding: 25px; 
+              border-radius: 8px; 
+              margin: 25px 0;
+              border: 1px solid #e5e7eb;
+            }
+            .details-title {
+              font-size: 16px;
+              font-weight: 700;
+              color: #111827;
+              margin-bottom: 15px;
+            }
+            .detail-row { 
+              display: flex; 
+              padding: 12px 0; 
+              border-bottom: 1px solid #e5e7eb; 
+            }
+            .detail-row:last-child {
+              border-bottom: none;
+            }
+            .detail-label { 
+              font-weight: 600; 
+              min-width: 170px; 
+              color: #6b7280;
+              font-size: 14px;
+            }
+            .detail-value {
+              color: #111827;
+              font-size: 14px;
+              word-break: break-word;
+            }
+            .info-section {
+              margin: 25px 0;
+            }
+            .info-section h3 {
+              font-size: 16px;
+              color: #111827;
+              font-weight: 700;
+              margin-bottom: 12px;
+            }
+            .info-section ul {
+              margin: 0;
+              padding-left: 20px;
+            }
+            .info-section li {
+              color: #4b5563;
+              margin-bottom: 8px;
+              font-size: 14px;
+            }
+            .info-section p {
+              color: #4b5563;
+              margin: 10px 0;
+              font-size: 14px;
+            }
+            .button { 
+              display: inline-block; 
+              background: #2563eb; 
+              color: white !important; 
+              padding: 14px 32px; 
+              text-decoration: none; 
+              border-radius: 8px; 
+              margin-top: 25px;
+              font-weight: 600;
+              font-size: 15px;
+              transition: background 0.3s;
+            }
+            .button:hover {
+              background: #1d4ed8;
+            }
+            .footer { 
+              text-align: center; 
+              padding: 30px 40px;
+              background: #f9fafb;
+              border-top: 1px solid #e5e7eb;
+            }
+            .footer-text {
+              color: #6b7280; 
+              font-size: 13px;
+              margin: 8px 0;
+            }
+            .footer-brand {
+              font-weight: 600;
+              color: #374151;
+              margin-top: 15px;
+            }
+            @media only screen and (max-width: 600px) {
+              .content, .brand-header, .footer { 
+                padding: 25px !important; 
+              }
+              .detail-row {
+                flex-direction: column;
+              }
+              .detail-label {
+                margin-bottom: 5px;
+              }
+            }
           </style>
         </head>
         <body>
-          <div class="container">
-            <div class="header">
-              <h1>⚠️ License Violation Detected</h1>
-            </div>
+          <div class="email-wrapper">
+            <div class="container">
+              <div class="brand-header">
+                <div class="brand-logo">🔐 License Manager</div>
+                <p class="brand-tagline">Secure License Management System</p>
+                <div class="alert-badge">⚠️ SECURITY ALERT</div>
+              </div>
             <div class="content">
-              <p>Hello ${params.userName},</p>
+              <p class="greeting">Hello ${params.userName},</p>
               
               <div class="alert">
-                <strong>Unauthorized License Usage Attempt</strong><br>
-                We detected an attempt to use your license on multiple Discord servers simultaneously.
+                <div class="alert-title">Unauthorized License Usage Attempt</div>
+                <p class="alert-text">We detected an attempt to use your license on multiple Discord servers simultaneously. Your security is our priority.</p>
               </div>
               
               <p>Your license <strong>${params.licenseKey}</strong> for <strong>${params.productName}</strong> is limited to <strong>${params.maxActivations} active server(s)</strong> at a time.</p>
               
               <div class="details">
-                <h3>Violation Details:</h3>
+                <div class="details-title">📋 Violation Details</div>
                 <div class="detail-row">
-                  <span class="detail-label">License Key:</span>
-                  <span>${params.licenseKey}</span>
+                  <span class="detail-label">License Key</span>
+                  <span class="detail-value">${params.licenseKey}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Product:</span>
-                  <span>${params.productName}</span>
+                  <span class="detail-label">Product</span>
+                  <span class="detail-value">${params.productName}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Current Server ID:</span>
-                  <span>${params.currentGuildId}</span>
+                  <span class="detail-label">Current Server ID</span>
+                  <span class="detail-value">${params.currentGuildId}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Attempted Server ID:</span>
-                  <span>${params.attemptedGuildId}</span>
+                  <span class="detail-label">Attempted Server ID</span>
+                  <span class="detail-value">${params.attemptedGuildId}</span>
                 </div>
                 ${params.attemptedGuildName ? `
                 <div class="detail-row">
-                  <span class="detail-label">Attempted Server Name:</span>
-                  <span>${params.attemptedGuildName}</span>
+                  <span class="detail-label">Attempted Server Name</span>
+                  <span class="detail-value">${params.attemptedGuildName}</span>
                 </div>
                 ` : ''}
                 <div class="detail-row">
-                  <span class="detail-label">Attempt Time:</span>
-                  <span>${params.attemptedAt.toLocaleString()}</span>
+                  <span class="detail-label">Attempt Time</span>
+                  <span class="detail-value">${params.attemptedAt.toLocaleString()}</span>
                 </div>
               </div>
               
-              <h3>What This Means:</h3>
-              <ul>
-                <li>Your license is already activated on a different server</li>
-                <li>The activation attempt on the new server was <strong>blocked</strong></li>
-                <li>Your existing bot continues to work normally</li>
-              </ul>
-              
-              <h3>Need to Use This License on a Different Server?</h3>
-              <p>To switch servers, please contact our support team. We'll help you reset the license binding so you can activate it on your desired server.</p>
-              
-              <h3>Need Multiple Activations?</h3>
-              <p>If you need to run the bot on multiple servers simultaneously, please contact our team about upgrading your license or purchasing additional licenses.</p>
-              
-              <a href="mailto:support@example.com" class="button">Contact Support</a>
-              
-              <div class="footer">
-                <p>This is an automated security notification. If you did not attempt this activation, please contact support immediately.</p>
-                <p>&copy; ${new Date().getFullYear()} License Management System. All rights reserved.</p>
+              <div class="info-section">
+                <h3>🛡️ What This Means</h3>
+                <ul>
+                  <li>Your license is already activated on a different server</li>
+                  <li>The activation attempt on the new server was <strong>blocked</strong></li>
+                  <li>Your existing bot continues to work normally</li>
+                </ul>
               </div>
+              
+              <div class="info-section">
+                <h3>🔄 Need to Use This License on a Different Server?</h3>
+                <p>To switch servers, please contact our support team. We'll help you reset the license binding so you can activate it on your desired server.</p>
+              </div>
+              
+              <div class="info-section">
+                <h3>📈 Need Multiple Activations?</h3>
+                <p>If you need to run the bot on multiple servers simultaneously, please contact our team about upgrading your license or purchasing additional licenses.</p>
+              </div>
+              
+              <a href="mailto:support@shrreyan.dev" class="button">Contact Support</a>
+              
             </div>
+            <div class="footer">
+              <p class="footer-text">This is an automated security notification. If you did not attempt this activation, please contact support immediately.</p>
+              <p class="footer-brand">🔐 License Manager</p>
+              <p class="footer-text">&copy; ${new Date().getFullYear()} License Management System. All rights reserved.</p>
+            </div>
+          </div>
           </div>
         </body>
       </html>
