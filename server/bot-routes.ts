@@ -1,6 +1,8 @@
 import type { Express } from "express";
 import { storage } from "./storage";
 import crypto from "crypto";
+import { sendLicenseViolationEmail } from "./email";
+import { LicenseViolation } from "./models/LicenseViolation";
 
 // Middleware to verify bot API key
 async function verifyBotApiKey(req: any, res: any, next: any) {
@@ -170,8 +172,63 @@ export function registerBotRoutes(app: Express) {
 
       // Check if already activated on a different guild
       if (license.guildId && license.guildId !== guildId) {
+        // Log the violation
+        try {
+          await LicenseViolation.create({
+            licenseId: license.id,
+            userId: license.userId,
+            licenseKey: license.key,
+            violationType: "max_activations_exceeded",
+            attemptedGuildId: guildId,
+            attemptedGuildName: req.body.guildName,
+            currentGuildId: license.guildId,
+            ipAddress: req.ip || req.socket.remoteAddress,
+            metadata: {
+              botVersion: req.body.botVersion,
+              attemptedAt: new Date(),
+            },
+            emailSent: false,
+          });
+
+          // Send email notification if user has email
+          if (license.userId) {
+            const user = await storage.getUser(license.userId);
+            if (user && user.email) {
+              try {
+                await sendLicenseViolationEmail({
+                  userEmail: user.email,
+                  userName: user.username || user.email,
+                  licenseKey: license.key,
+                  productName: license.productName || "Discord Bot",
+                  maxActivations: license.maxActivations || 1,
+                  attemptedGuildId: guildId,
+                  attemptedGuildName: req.body.guildName,
+                  currentGuildId: license.guildId,
+                  attemptedAt: new Date(),
+                });
+                
+                // Mark email as sent
+                await LicenseViolation.findOneAndUpdate(
+                  { 
+                    licenseId: license.id, 
+                    attemptedGuildId: guildId 
+                  },
+                  { emailSent: true },
+                  { sort: { createdAt: -1 } }
+                );
+                
+                console.log(`✅ License violation email sent to ${user.email}`);
+              } catch (emailError) {
+                console.error("Failed to send violation email:", emailError);
+              }
+            }
+          }
+        } catch (violationError) {
+          console.error("Failed to log license violation:", violationError);
+        }
+
         return res.status(403).json({ 
-          error: "License already activated on another server",
+          error: "License already activated on another server. You will receive an email with instructions on how to resolve this.",
           activatedGuildId: license.guildId
         });
       }

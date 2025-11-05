@@ -116,3 +116,60 @@ export function isAdmin(req: any, res: any, next: any) {
   }
   res.status(403).json({ error: "Forbidden - Admin access required" });
 }
+
+// Role-based permission middleware
+export function hasRole(...allowedRoles: string[]) {
+  return (req: any, res: any, next: any) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    
+    const user = req.user as any;
+    
+    // Founder has access to everything
+    if (user.role === "founder") {
+      return next();
+    }
+    
+    // Check if user's role is in the allowed list
+    if (!allowedRoles.includes(user.role)) {
+      return res.status(403).json({ 
+        error: `Forbidden: ${allowedRoles.join(" or ")} access required`,
+        userRole: user.role 
+      });
+    }
+    
+    next();
+  };
+}
+
+// Permission level check (more granular than roles)
+export function hasPermission(permission: "read" | "write" | "delete" | "admin") {
+  return (req: any, res: any, next: any) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    
+    const user = req.user as any;
+    
+    // Define permission hierarchy
+    const permissions: Record<string, string[]> = {
+      founder: ["read", "write", "delete", "admin"],
+      admin: ["read", "write", "delete", "admin"],
+      staff: ["read", "write"],
+      customer: ["read"],
+      user: ["read"],
+    };
+    
+    const userPermissions = permissions[user.role] || [];
+    
+    if (!userPermissions.includes(permission)) {
+      return res.status(403).json({ 
+        error: `Forbidden: ${permission} permission required`,
+        userRole: user.role 
+      });
+    }
+    
+    next();
+  };
+}
